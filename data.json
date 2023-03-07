@@ -1,0 +1,27 @@
+{
+    "operationloadcell":{
+        "method":"post",
+        "payload":{
+            "data1":{"tag":"Dados.apis.endpoint1.info1",
+            "format":"float"},
+            "data2":{"tag":"Dados.apis.endpoint1.info2",
+            "format":"float"}
+        },
+        "response":{
+            "data3":"Dados.apis.endpoint1.info3",
+            "data4":"Dados.apis.endpoint1.info4"
+        }
+    },
+    "Operation_LoadCellCalibration":{
+        "method":"post",
+        "payload":{
+            "P11_P20":{"tag":"Dados.apis.endpoint2.P11_P20",
+            "format":"float"},
+            "P1_P10":{"tag":"Dados.apis.endpoint2.P1_P10",
+            "format":"float"}
+        },
+        "response":{
+        }
+    }
+    
+}
