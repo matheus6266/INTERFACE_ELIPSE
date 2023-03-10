@@ -5,10 +5,6 @@ import json
 import time
 requests.packages.urllib3.disable_warnings()
 
-#Ler json
-json_file=open('dina/data.json')
-json_data=json.load(json_file)
-json_file.close()
 
 class crio:
     def __init__(self,url):
@@ -19,7 +15,7 @@ class crio:
         return (result.text)
 
     def get(self,endpoint):
-        result=requests.get(url=endpoint)
+        result=requests.get(url=self.url+endpoint)
         return json.loads(result.text)
         
 
@@ -119,47 +115,112 @@ def endpoint2():
             print(e)
         time.sleep(2)
 
+
+def LabView_Failure_status():
+    key="LabVIEW_Server_Status/LabView_Failure_status"
+    hb=1
+    while 1:
+        try:
+            resultado=c.get(key)
+            e3.write_tag([["Dados.LabView_Failure_status.System_Failure_Pneumatico",resultado["System_Failure_Pneumatico"]],["Dados.LabView_Failure_status.System_Failure_FC_Roletes",resultado["System_Failure_FC_Roletes"]],["Dados.LabView_Failure_status.System_Failure_Geral",resultado["System_Failure_Geral"]],["Dados.LabView_Failure_status.System_Failure_Inversor",resultado["System_Failure_Inversor"]],["Dados.LabView_Failure_status.System_Failure_List",resultado["System_Failure_List"]]])
+            e3.write_tag(["Dados.LabView_Failure_status.hb",hb+1])
+            if hb<99:
+                hb=hb+1
+            else:
+                hb=1
+        except:
+            pass
+        time.sleep(2)
+
+
+
+def LabView_server_status():
+    key="LabVIEW_Server_Status/LabView_server_status"
+    hb=1
+    while 1:
+        try:
+            resultado=c.get(key)
+            data=[["Dados.LabView_server_status.UserMsgString",resultado["UserMsgString"]],
+            ["Dados.LabView_server_status.Operation_Codes",resultado["Operation_Codes"]],
+            ["Dados.LabView_server_status.System_Failure_List",resultado["System_Failure_List"]],
+            ["Dados.LabView_server_status.Operation_Status",resultado["Operation_Status"]],
+            ["Dados.LabView_server_status.Error_Status",resultado["Error_Status"]],
+            ["Dados.LabView_server_status.System_Failure_Inversor",resultado["System_Failure_Inversor"]],
+            ["Dados.LabView_server_status.Zero_RPM_Encoder",resultado["Zero_RPM_Encoder"]],
+            ["Dados.LabView_server_status.System_Failure_Geral",resultado["System_Failure_Geral"]],
+            ["Dados.LabView_server_status.System_Failure_Pneumatico",resultado["System_Failure_Pneumatico"]],
+            ["Dados.LabView_server_status.System_Failure_FC_Roletes",resultado["System_Failure_FC_Roletes"]],
+            ["Dados.LabView_server_status.hb",hb]]
+            e3.write_tag(data)
+            e3.write_tag(["Dados.LabView_Failure_status.hb",hb+1])
+            if hb<99:
+                hb=hb+1
+            else:
+                hb=1
+        except:
+            pass
+        time.sleep(2)
+
+
+def Operation_Curve_Loss_Dynamic():
+
+    key = "Operations/Operation_Curve_Loss_Dynamic"
+    while 1:
+        try:
+            t=e3.read_tag("Dados.Operation_Curve_Loss_Dynamic.iniciar")
+            if t==True:
+                e3.write_tag(["Dados.Operation_Curve_Loss_Dynamic.iniciar","False"])
+                resultado=c.get(key)
+        except:
+            pass
+        time.sleep(0.5)    
+
+def Operation_Curve_Loss_Static():
+
+    key = "Operations/Operation_Curve_Loss_Static"
+    while 1:
+        try:
+            t=e3.read_tag("Dados.Operation_Curve_Loss_Static.iniciar")
+            if t==True:
+                e3.write_tag(["Dados.Operation_Curve_Loss_Static.iniciar","False"])
+                resultado=c.get(key)
+        except:
+            pass
+        time.sleep(0.5)
+
+def Operation_SamplePositioning():
+
+    key = "Operations/Operation_SamplePositioning"
+    while 1:
+        try:
+            t=e3.read_tag("Dados.Operation_SamplePositioning.iniciar")
+            if t==True:
+                e3.write_tag(["Dados.Operation_SamplePositioning.iniciar","False"])
+                print("start")
+                resultado=c.get(key)
+                print("end")
+        except:
+            pass
+        time.sleep(0.5)
+
 e3=elipse()
+c=crio("http://169.254.62.198:8001/DinaCON_WebService/")
 
-#be=e3.read_tag("Dados.Interface1.Btn_Enviar")
-
-#print(be)
-
-c=crio("http://127.0.0.1:8000")
-
-Operation_LoadCellCalibration()
-
-
-t1=Thread(target=Operation_LoadCellCalibration)
+t=[]
+t.append(Thread(target=LabView_Failure_status))
+t.append(Thread(target=LabView_server_status))
+t.append(Thread(target=Operation_Curve_Loss_Dynamic))
+t.append(Thread(target=Operation_Curve_Loss_Static))
+t.append(Thread(target=Operation_SamplePositioning))
 
 
 
-t1.start()
+for th in t:
+    th.start()
 
 
 
-t1.join()
 
 
-print("acabou")
-
-#x=c.post("items/",{"ss":3})
-#print(x)
-#data_example={
-#    "id":0,
-#    "jsonrpc":"2.0",
-#    "method":"PlcProgram.Read",
-#    "params":{
-#        "var":"\""+1+"\"."+2
-#    }
-#}
-
-#"operationloadcell2":{
-#        "method":"post",
-#        "payload":{
-#            "data1":"Dados.apis.endpoint1.info1",
-#            "data2":"Dados.apis.endpoint1.info2"
-#        },
-#        "response":{
-#        }
-#    }
+for th in t:
+    th.join()
