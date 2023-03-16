@@ -3,8 +3,11 @@ from threading import Thread
 import requests
 import json
 import time
+import asyncio
+import websockets
 requests.packages.urllib3.disable_warnings()
 
+r_data=[["Velocidade_kmh",0],["Forca_calibrada",0],["RPM_encoder",0],["Forca_Raw",0]]
 
 class crio:
     def __init__(self,url):
@@ -203,8 +206,105 @@ def Operation_SamplePositioning():
             pass
         time.sleep(0.5)
 
+def Interface_Read_Datalog():
+
+    key = "Operations_Servers_Interface/Interface_Read_Datalog"
+
+    resultado=c.get(key)
+    print(resultado)
+    # O resultado é aquele vetor que usávamos para analisar os testes
+
+def Interface_RoadTests_Driver():
+    {'Distancia_percorrida': 0, 'Velocidade_Target_RoadTests': 0, 'Velocidade_Encoder_km_h': 0}
+    key = "Operations_Servers_Interface/Interface_RoadTests_Driver"
+    resultado=c.get(key)
+    print(resultado)
+
+def Operation_FreeTeste():
+    t=e3.read_tag("Dados.TesteLivre.IniciarTeste")
+    post_ope_free_teste = {
+                            "coefDinaCoastDown": [140.92,0,0.04240],
+                            "coefLossCurve": [-1.42657,-0.0214967,-0.000723819]
+                            }
+    key = "Operations/Operation_FreeTest"
+    print(t)
+    if t == True:
+        c.post(key, post_ope_free_teste)
+
+
+def Interface_FreeTest():
+    key =  "Operations_Servers_Interface/Interface_FreeTest"
+    tag_list = ["Dados.TesteLivre.IniciarTeste", "Dados.TesteLivre.ZeraTeste", "Dados.TesteLivre.FinalizarTeste",
+                 "Dados.TesteLivre.SetPointForca","Dados.TesteLivre.SetPointVeloc", "Dados.TesteLivre.TipoTeste" ]
+    
+    while 1:
+        try:
+            t=e3.read_tag(tag_list)
+            post_ope_interface_free_teste = {
+                            "coefCoastDown": [140.92,0,0.04240],
+                            "coefLossCurve": [-1.42657,-0.0214967,-0.000723819],
+                            "VelForce": False,
+                            "SetPointVel": t[4],
+                            "SetPointForce": t[3],
+                            "TimeInVel": 0.00,
+                            "TimeInForce": 0.00,
+                            "EnableForceCoastDown": False,
+                            "StartTest": t[0],
+                            "StopTest": t[2],
+                            "ZeraDistancia": t[1],
+                            "FreeTestType": t[5]
+                                }
+            if t[2] == True:
+                e3.write_tag(["Dados.TesteLivre.FinalizarTeste","False"])
+                post_ope_interface_free_teste = {
+                            "coefCoastDown": [140.92,0,0.04240],
+                            "coefLossCurve": [-1.42657,-0.0214967,-0.000723819],
+                            "VelForce": False,
+                            "SetPointVel": 0,
+                            "SetPointForce": 0,
+                            "TimeInVel": 0.00,
+                            "TimeInForce": 0.00,
+                            "EnableForceCoastDown": False,
+                            "StartTest": 0,
+                            "StopTest": True,
+                            "ZeraDistancia": 0,
+                            "FreeTestType": 0
+                                }
+            c.post(key, post_ope_interface_free_teste)
+        except:
+            pass
+        time.sleep(0.5)
+
+    
+    print(e3.read_tag(tag_list))
+
+
+async def test():
+    async with websockets.connect('ws://169.254.62.198:6123') as websocket:
+        i=0
+        while 1:
+            await websocket.send("{}".format(i))
+            response = await websocket.recv()
+            print(response)
+            try:
+                data=json.loads(response)
+                r=[]
+                for d in r_data:
+                    if data[d[0]] != d[1]:
+                        r.append(["Dados.websocket.{}".format(d[0]),data[d[0]]])
+                        d[1]=data[d[0]]
+                e3.write_tag(r)
+            except:
+                pass
+            time.sleep(0.1)
+
+
+
 e3=elipse()
 c=crio("http://169.254.62.198:8001/DinaCON_WebService/")
+
+
+Interface_FreeTest()
 
 t=[]
 t.append(Thread(target=LabView_Failure_status))
@@ -212,15 +312,22 @@ t.append(Thread(target=LabView_server_status))
 t.append(Thread(target=Operation_Curve_Loss_Dynamic))
 t.append(Thread(target=Operation_Curve_Loss_Static))
 t.append(Thread(target=Operation_SamplePositioning))
-
-
+t.append(Thread(target=Operation_FreeTeste))
+t.append(Thread(target=Interface_FreeTest))
 
 for th in t:
     th.start()
-
-
-
-
-
+while 1:
+    try:
+        asyncio.get_event_loop().run_until_complete(test())
+    except:
+        pass
 for th in t:
     th.join()
+
+
+
+
+
+
+
