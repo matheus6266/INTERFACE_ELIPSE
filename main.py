@@ -7,7 +7,44 @@ import asyncio
 import websockets
 requests.packages.urllib3.disable_warnings()
 
-r_data=[["Velocidade_kmh",0],["Forca_calibrada",0],["RPM_encoder",0],["Forca_Raw",0]]
+r_data=[
+    ["Velocidade_kmh",99999],
+    ["Forca_calibrada",999999],
+    ["Distancia_Percorrida",999999],
+    ["Operation_Status",999999],
+    ["Operation_Codes",999999],
+    ["User_msg","mortadela"],
+    ["Ind_Pressao_Ar",""],
+    ["Ind_Sistema_Pressao_Ar",""],
+    ["Ind_Botao_Emegencia_Painel_H2",""],
+    ["Ind_Botao_Emegencia_Painel_F1",""],
+    ["Ind_Botao_Emergencia_CR",""],
+    ["Ind_Falha_Seguranca",""],
+    ["Ind_Tensao_Comando",""],
+    ["Ind_Stop_Usuario",""],
+    ["System_Failure_Geral_Ind",""],
+    ["System_Failure_Inversor_Ind",""],
+    ["System_Failure_Pneumatico_Ind",""],
+    ["System_Failure_FC_Roletes_Ind",""],
+    ["Ind_Disjuntor_Comando",""],
+    ["Ind_Disjuntor_Aquecimento",""],
+    ["Ind_Disjuntor_Ventilador",""],
+    ["Ind_Falha_Inversor",""],
+    ["Ind_Falha_Modos_Operacao_CC",""],
+    ["Ind_Alerta_Sobreaquecimento_Motor_CA",""],
+    ["Ind_Sobreaquecimento_Motor_CA",""],
+    ["Failure_Rotacao_Maxima_Atingida",""],
+    ["Failure_FC_Sup_Rol_Post_Esquerdo",""],
+    ["Failure_FC_Sup_Rol_Post_Direito",""],
+    ["Failure_FC_Sup_Rol_Ant_Esquerdo",""],
+    ["Failure_FC_Sup_Rol_Ant_Direito",""],
+    ["Failure_FC_Inf_Rol_Post_Esquerdo",""],
+    ["Failure_FC_Inf_Rol_Post_Direito",""],
+    ["Failure_FC_Inf_Rol_Ant_Esquerdo",""],
+    ["Failure_FC_Inf_Rol_Ant_Direito",""],
+    ["System_Reset",""],
+    ["Rolo_Inputs",""]
+]
 
 class crio:
     def __init__(self,url):
@@ -98,10 +135,14 @@ def Operation_FreeTest():
         if t == True:            
             e3.write_tag(["Dados.apis.FreeTest.iniciar","False"])
             dados_recebidos=e3.read_tag(tag_list)
+            for i in range(0,len(dados_recebidos)):
+                if dados_recebidos[i]==None:
+                    dados_recebidos[i]=0
             dados_envia= {
-                "coefDinaCoastDown": [dados_recebidos[0],dados_recebidos[1],dados_recebidos[2]],
-                "coefLossCurve": [dados_recebidos[3],dados_recebidos[4],dados_recebidos[5]]
+                "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
+                "coefLossCurve": [float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5])]
             }
+            print(key)
             c.post(key, dados_envia)
 
 def Operation_LoadCellCalibration():
@@ -175,16 +216,17 @@ def Operation_Warmup():
     while 1:
         try:  
             if e3.read_tag("Dados.apis.Operation_Warmup.btn")==True:
+                print("Botao")
                 e3.write_tag(["Dados.apis.Operation_Warmup.btn",False])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
-                    "warmupVelocity": [dados_recebidos[0],dados_recebidos[1],dados_recebidos[2],dados_recebidos[3],dados_recebidos[4]],
-                    "warmupTime": [dados_recebidos[5],dados_recebidos[6],dados_recebidos[7],dados_recebidos[8],dados_recebidos[9]]
+                    "warmupVelocity": [int(dados_recebidos[0]),int(dados_recebidos[1]),int(dados_recebidos[2]),int(dados_recebidos[3]),int(dados_recebidos[4])],
+                    "warmupTime": [int(dados_recebidos[5]),int(dados_recebidos[6]),int(dados_recebidos[7]),int(dados_recebidos[8]),int(dados_recebidos[9])]
                 }
                 c.post(key,dados_enviar)
-                e3.write_tag(["Dados.apis.Operation_Warmup.info","Enviado!"])
-        except:
-            pass
+        except Exception as e:
+            print(e)
+        time.sleep(0.5)
 
 
 
@@ -206,46 +248,51 @@ def Interface_Curve_Loss_Static():
 def Interface_FreeTest():
     key =  "Operations_Servers_Interface/Interface_FreeTest"
     tag_list = [
-        "Dados.FreeTest.coefCoastDown.t1",
-        "Dados.FreeTest.coefCoastDown.t2",
-        "Dados.FreeTest.coefCoastDown.t3",
-        "Dados.FreeTest.coefLossCurve.t1",
-        "Dados.FreeTest.coefLossCurve.t2",
-        "Dados.FreeTest.coefLossCurve.t3", 
-        "Dados.FreeTest.VelForce",
-        "Dados.FreeTest.SetPointVel",
-        "Dados.FreeTest.SetPointForce",
-        "Dados.FreeTest.TimeInVel",
-        "Dados.FreeTest.TimeInForce",
-        "Dados.FreeTest.EnableForceCoastDown",
-        "Dados.FreeTest.StartTest",
-        "Dados.FreeTest.StopTest",
-        "Dados.FreeTest.ZeraDistancia",
-        "Dados.FreeTest.FreeTestType"
+        "Dados.apis.FreeTest.coefCoastDown.t1",
+        "Dados.apis.FreeTest.coefCoastDown.t2",
+        "Dados.apis.FreeTest.coefCoastDown.t3",
+        "Dados.apis.FreeTest.coefLossCurve.t1",
+        "Dados.apis.FreeTest.coefLossCurve.t2",
+        "Dados.apis.FreeTest.coefLossCurve.t3", 
+        "Dados.apis.FreeTest.VelForce",
+        "Dados.apis.FreeTest.SetPointVel",
+        "Dados.apis.FreeTest.SetPointForce",
+        "Dados.apis.FreeTest.TimeInVel",
+        "Dados.apis.FreeTest.TimeInForce",
+        "Dados.apis.FreeTest.EnableForceCoastDown",
+        "Dados.apis.FreeTest.StartTest",
+        "Dados.apis.FreeTest.StopTest",
+        "Dados.apis.FreeTest.ZeraDistancia",
+        "Dados.apis.FreeTest.FreeTestType"
     ]
     while 1:
         try:
-            b=e3.read_tag("Dados.FreeTest.atualiza")
+            b=e3.read_tag("Dados.apis.FreeTest.atualiza")
             if b == True:
-                e3.write_tag(["Dados.FreeTest.atualiza","False"])
+                e3.write_tag([["Dados.apis.FreeTest.atualiza","False"],["Dados.apis.FreeTest.StopTest","False"],["Dados.apis.FreeTest.ZeraDistancia","False"]])
                 t=e3.read_tag(tag_list)
+                for i in range(0,len(t)):
+                    if t[i]==None:
+                        t[i]=0
+                print(t)
                 post_ope_interface_free_teste = {
-                    "coefCoastDown": [t[0],t[1],t[2]],
-                    "coefLossCurve": [t[3],t[4],t[5]],
-                    "VelForce": bool(t[6]),
-                    "SetPointVel": t[7],
-                    "SetPointForce": t[8],
-                    "TimeInVel": t[9],
-                    "TimeInForce": t[10],
-                    "EnableForceCoastDown": bool(t[11]),
-                    "StartTest": t[12],
-                    "StopTest": t[13],
-                    "ZeraDistancia": t[14],
-                    "FreeTestType": t[15]
-                }    
+                    "coefCoastDown": [float(t[0]),float(t[1]),float(t[2])],
+                    "coefLossCurve": [float(t[3]),float(t[4]),float(t[5])],
+                    "VelForce": t[6]==True,
+                    "SetPointVel": float(t[7]),
+                    "SetPointForce": float(t[8]),
+                    "TimeInVel": float(t[9]),
+                    "TimeInForce": float(t[10]),
+                    "EnableForceCoastDown": t[11]==True,
+                    "StartTest": t[12]==True,
+                    "StopTest": t[13]==True,
+                    "ZeraDistancia": t[14]==True,
+                    "FreeTestType": int(t[15])
+                }
+                print(post_ope_interface_free_teste)
                 c.post(key, post_ope_interface_free_teste)
-        except:
-            pass
+        except Exception as e:
+            print(e)
         time.sleep(0.5)
 
 def Interface_Input_LoadCell_Arrays():
@@ -392,7 +439,26 @@ def Interface_Read_Datalog():
 
 #?
 def Interface_RoadTests():
-    pass
+    key="Operations_Servers_Interface/Interface_RoadTests"
+    while 1:
+        try:
+            if e3.read_tag("Dados.apis.Operation_Warmup.atualiza")==True:
+                e3.write_tag(["Dados.apis.Operation_Warmup.atualiza","False"])
+                t=e3.read_tag("Dados.apis.Operation_Warmup.stop")
+                post_ope_interface_free_teste = {
+                    "TestStart": False,
+                    "UserStop": t
+                }    
+                c.post(key, post_ope_interface_free_teste)
+                time.sleep(0.5)
+                post_ope_interface_free_teste = {
+                    "TestStart": False,
+                    "UserStop": False
+                }    
+                c.post(key, post_ope_interface_free_teste)
+        except:
+            pass
+        time.sleep(0.5)
 
 #?
 def Interface_RoadTests_Driver():
@@ -413,21 +479,22 @@ def Interface_RoadTests_Driver():
 
 async def wsocket():
     async with websockets.connect('ws://169.254.62.198:6123') as websocket:
+        time.sleep(5)
         i=0
         while 1:
             await websocket.send("{}".format(i))
             response = await websocket.recv()
-            print(response)
             try:
                 data=json.loads(response)
                 r=[]
                 for d in r_data:
                     if data[d[0]] != d[1]:
-                        r.append(["Dados.websocket.{}".format(d[0]),data[d[0]]])
+                        r.append(["Dados.apis.websocket.{}".format(d[0]),data[d[0]]])
                         d[1]=data[d[0]]
-                e3.write_tag(r)
-            except:
-                pass
+                if r!=[]:
+                    e3.write_tag(r)
+            except Exception as e:
+                print("Falha:{}{}".format(e,d[0]))
             time.sleep(0.1)
 
 
@@ -436,10 +503,14 @@ e3=elipse()
 c=crio("http://169.254.62.198:8001/DinaCON_WebService/")
 
 
-Interface_FreeTest()
 
 t=[]
-t.append(Thread(target=Operation_Curve_Loss_Dynamic))
+t.append(Thread(target=Operation_Warmup))
+t.append(Thread(target=Interface_RoadTests))
+t.append(Thread(target=Operation_SamplePositioning))
+t.append(Thread(target=Interface_FreeTest))
+t.append(Thread(target=Operation_FreeTest))
+
 
 
 for th in t:
