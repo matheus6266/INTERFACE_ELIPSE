@@ -14,36 +14,9 @@ r_data=[
     ["Operation_Status",999999],
     ["Operation_Codes",999999],
     ["User_msg","mortadela"],
-    ["Ind_Pressao_Ar",""],
-    ["Ind_Sistema_Pressao_Ar",""],
-    ["Ind_Botao_Emegencia_Painel_H2",""],
-    ["Ind_Botao_Emegencia_Painel_F1",""],
-    ["Ind_Botao_Emergencia_CR",""],
-    ["Ind_Falha_Seguranca",""],
-    ["Ind_Tensao_Comando",""],
-    ["Ind_Stop_Usuario",""],
-    ["System_Failure_Geral_Ind",""],
-    ["System_Failure_Inversor_Ind",""],
-    ["System_Failure_Pneumatico_Ind",""],
-    ["System_Failure_FC_Roletes_Ind",""],
-    ["Ind_Disjuntor_Comando",""],
-    ["Ind_Disjuntor_Aquecimento",""],
-    ["Ind_Disjuntor_Ventilador",""],
-    ["Ind_Falha_Inversor",""],
-    ["Ind_Falha_Modos_Operacao_CC",""],
-    ["Ind_Alerta_Sobreaquecimento_Motor_CA",""],
-    ["Ind_Sobreaquecimento_Motor_CA",""],
-    ["Failure_Rotacao_Maxima_Atingida",""],
-    ["Failure_FC_Sup_Rol_Post_Esquerdo",""],
-    ["Failure_FC_Sup_Rol_Post_Direito",""],
-    ["Failure_FC_Sup_Rol_Ant_Esquerdo",""],
-    ["Failure_FC_Sup_Rol_Ant_Direito",""],
-    ["Failure_FC_Inf_Rol_Post_Esquerdo",""],
-    ["Failure_FC_Inf_Rol_Post_Direito",""],
-    ["Failure_FC_Inf_Rol_Ant_Esquerdo",""],
-    ["Failure_FC_Inf_Rol_Ant_Direito",""],
-    ["System_Reset",""],
-    ["Rolo_Inputs",""]
+    ["Falhas",""],
+    ["Rolo_Inputs",""],
+    ["Calibration_Stage",""]
 ]
 
 class crio:
@@ -81,9 +54,9 @@ def Operation_Coast_Down():
                 e3.write_tag(["Dados.apis.Operation_Coast_Down.btn","False"])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
-                    "coefPistaRolamento": [dados_recebidos[0],dados_recebidos[1],dados_recebidos[2]],
-                    "massaAmostra": dados_recebidos[6],
-                    "coefLossCurve": [dados_recebidos[3],dados_recebidos[4],dados_recebidos[5]]
+                    "coefPistaRolamento": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
+                    "massaAmostra": float(dados_recebidos[6]),
+                    "coefLossCurve": [float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5])]
                 }
                 c.post(key,dados_enviar)
         except:
@@ -104,7 +77,6 @@ def Operation_Curve_Loss_Dynamic():
         time.sleep(0.5)    
 
 def Operation_Curve_Loss_Static():
-
     key = "Operations/Operation_Curve_Loss_Static"
     while 1:
         try:
@@ -112,6 +84,7 @@ def Operation_Curve_Loss_Static():
             if t==True:
                 e3.write_tag(["Dados.apis.Operation_Curve_Loss_Static.btn","False"])
                 resultado=c.get(key)
+                e3.write_tag(["Dados.apis.Operation_Curve_Loss_Static.f0","0"],["Dados.apis.Operation_Curve_Loss_Static.f1","0"],["Dados.apis.Operation_Curve_Loss_Static.f2","0"])
         except:
             pass
         time.sleep(0.5)
@@ -148,6 +121,7 @@ def Operation_FreeTest():
 def Operation_LoadCellCalibration():
     key="Operations/Operation_LoadCellCalibration"
     tag_list=[
+        "Dados.apis.Operation_LoadCellCalibration.P1_P10.h1",
         "Dados.apis.Operation_LoadCellCalibration.P1_P10.t1",
         "Dados.apis.Operation_LoadCellCalibration.P1_P10.t2",
         "Dados.apis.Operation_LoadCellCalibration.P1_P10.t3",
@@ -158,6 +132,7 @@ def Operation_LoadCellCalibration():
         "Dados.apis.Operation_LoadCellCalibration.P1_P10.t8",
         "Dados.apis.Operation_LoadCellCalibration.P1_P10.t9",
         "Dados.apis.Operation_LoadCellCalibration.P1_P10.t10",
+        "Dados.apis.Operation_LoadCellCalibration.P11_P20.h1",
         "Dados.apis.Operation_LoadCellCalibration.P11_P20.t1",
         "Dados.apis.Operation_LoadCellCalibration.P11_P20.t2",
         "Dados.apis.Operation_LoadCellCalibration.P11_P20.t3",
@@ -174,17 +149,115 @@ def Operation_LoadCellCalibration():
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.btn")==True:
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.btn",False])
                 dados_recebidos=e3.read_tag(tag_list)
+                for i in range(0,len(dados_recebidos)):
+                    if dados_recebidos[i]==None:
+                        dados_recebidos[i]=0
                 data={
-                    "P1_P10":[dados_recebidos[0],dados_recebidos[1],dados_recebidos[2],dados_recebidos[3],dados_recebidos[4],dados_recebidos[5],dados_recebidos[6],dados_recebidos[7],dados_recebidos[8],dados_recebidos[9]],
-                    "P11_P20":[dados_recebidos[10],dados_recebidos[11],dados_recebidos[12],dados_recebidos[13],dados_recebidos[14],dados_recebidos[15],dados_recebidos[16],dados_recebidos[17],dados_recebidos[18],dados_recebidos[19]]
+                    "P1_P10":[float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2]),float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6]),float(dados_recebidos[7]),float(dados_recebidos[8]),float(dados_recebidos[9]),float(dados_recebidos[10])],
+                    "P11_P20":[float(dados_recebidos[11]),float(dados_recebidos[12]),float(dados_recebidos[13]),float(dados_recebidos[14]),float(dados_recebidos[15]),float(dados_recebidos[16]),float(dados_recebidos[17]),float(dados_recebidos[18]),float(dados_recebidos[19]),float(dados_recebidos[20]),float(dados_recebidos[21])]
                 }
-                c.post(key,data)
-        except:
-            pass
+                result=json.loads(c.post(key,data))           
+                dados=[
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_loadCell_Calibrated.t1",result["Medicao final"][0]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t2",result["Medicao final"][1]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t3",result["Medicao final"][2]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t4",result["Medicao final"][3]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t5",result["Medicao final"][4]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t6",result["Medicao final"][5]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t7",result["Medicao final"][6]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t8",result["Medicao final"][7]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t9",result["Medicao final"][8]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t10",result["Medicao final"][9]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t11",result["Medicao final"][10]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t12",result["Medicao final"][11]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t13",result["Medicao final"][12]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t14",result["Medicao final"][13]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t15",result["Medicao final"][14]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t16",result["Medicao final"][15]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t17",result["Medicao final"][16]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t18",result["Medicao final"][17]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t19",result["Medicao final"][18]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t20",result["Medicao final"][19]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t21",result["Medicao final"][20]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t1",result["Sequencia Forca "][0]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t2",result["Sequencia Forca "][1]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t3",result["Sequencia Forca "][2]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t4",result["Sequencia Forca "][3]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t5",result["Sequencia Forca "][4]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t6",result["Sequencia Forca "][5]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t7",result["Sequencia Forca "][6]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t8",result["Sequencia Forca "][7]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t9",result["Sequencia Forca "][8]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t10",result["Sequencia Forca "][9]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t11",result["Sequencia Forca "][10]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t12",result["Sequencia Forca "][11]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t13",result["Sequencia Forca "][12]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t14",result["Sequencia Forca "][13]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t15",result["Sequencia Forca "][14]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t16",result["Sequencia Forca "][15]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t17",result["Sequencia Forca "][16]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t18",result["Sequencia Forca "][17]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t19",result["Sequencia Forca "][18]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t20",result["Sequencia Forca "][19]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t21",result["Sequencia Forca "][20]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t1",result["Incerteza abs final"][0]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t2",result["Incerteza abs final"][1]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t3",result["Incerteza abs final"][2]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t4",result["Incerteza abs final"][3]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t5",result["Incerteza abs final"][4]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t6",result["Incerteza abs final"][5]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t7",result["Incerteza abs final"][6]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t8",result["Incerteza abs final"][7]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t9",result["Incerteza abs final"][8]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t10",result["Incerteza abs final"][9]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t11",result["Incerteza abs final"][10]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t12",result["Incerteza abs final"][11]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t13",result["Incerteza abs final"][12]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t14",result["Incerteza abs final"][13]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t15",result["Incerteza abs final"][14]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t16",result["Incerteza abs final"][15]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t17",result["Incerteza abs final"][16]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t18",result["Incerteza abs final"][17]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t19",result["Incerteza abs final"][18]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t20",result["Incerteza abs final"][19]],
+                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t21",result["Incerteza abs final"][20]],
+                    ["Dados.apis.Operation_LoadCellCalibration.concluido","True"]
+                ]
+                e3.write_tag(dados)
+        except Exception as e:
+            print(e)
+        time.sleep(0.5)
 
 #?
 def Operation_RoadTest():
-    pass
+    key="Operations/Operation_LoadCellCalibration"
+    tag_list=[
+        "Dados.amostraselecionada.cAcalculado",
+        "Dados.amostraselecionada.cBcalculado",
+        "Dados.amostraselecionada.cCcalculado",
+        "Dados.amostraselecionada.massa",
+        "Dados.Curvadeperda.f0",
+        "Dados.Curvadeperda.f1",
+        "Dados.Curvadeperda.f2",
+    ]
+    while 1:
+        t=e3.read_tag("Dados.apis.RoadTest.btn")
+        if t == True:            
+            e3.write_tag(["Dados.apis.RoadTest.btn","False"])
+            dados_recebidos=e3.read_tag(tag_list)
+            for i in range(0,len(dados_recebidos)):
+                if dados_recebidos[i]==None:
+                    dados_recebidos[i]=0
+            dados_envia= {
+                "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
+                "massaAmostra": float(dados_recebidos[3]),
+                "coefLossCurve": [float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6])],
+                "DurabDist": [0.0,0.0],
+                "DurabVel": [1,1],
+                "TypeTest": True,
+                "RoadVelArray": [0,0]
+            }
+            c.post(key, dados_envia)
 
 def Operation_SamplePositioning():
     key = "Operations/Operation_SamplePositioning"
@@ -298,7 +371,7 @@ def Interface_FreeTest():
 def Interface_Input_LoadCell_Arrays():
     key="Operations_Servers_Interface/Interface_Input_LoadCell_Arrays"
     tag_list=[
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t1",
+        "Dados.apis.Operation_LoadCellCalibration.Data_loadCell_Calibrated.t1",
         "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t2",
         "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t3",
         "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t4",
@@ -364,13 +437,13 @@ def Interface_Input_LoadCell_Arrays():
     ]   
     while 1:
         try:
-            if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.envia"):
-                e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.envia",False])
+            if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.envia_calibracao"):
+                e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.envia_calibracao",False])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
-                    "Data_LoadCell_Calibrated": [dados_recebidos[0],dados_recebidos[1],dados_recebidos[2],dados_recebidos[3],dados_recebidos[4],dados_recebidos[5],dados_recebidos[6],dados_recebidos[7],dados_recebidos[8],dados_recebidos[9],dados_recebidos[10],dados_recebidos[11],dados_recebidos[12],dados_recebidos[13],dados_recebidos[14],dados_recebidos[15],dados_recebidos[16],dados_recebidos[17],dados_recebidos[18],dados_recebidos[19],dados_recebidos[20]],
-                    "Data_LoadCell_Raw": [dados_recebidos[20],dados_recebidos[21],dados_recebidos[22],dados_recebidos[23],dados_recebidos[24],dados_recebidos[25],dados_recebidos[26],dados_recebidos[27],dados_recebidos[28],dados_recebidos[29],dados_recebidos[20],dados_recebidos[21],dados_recebidos[22],dados_recebidos[23],dados_recebidos[24],dados_recebidos[25],dados_recebidos[26],dados_recebidos[27],dados_recebidos[28],dados_recebidos[29],dados_recebidos[30]],
-                    "Data_LoadCell_Uncertainties": [dados_recebidos[30],dados_recebidos[31],dados_recebidos[32],dados_recebidos[33],dados_recebidos[34],dados_recebidos[35],dados_recebidos[36],dados_recebidos[37],dados_recebidos[38],dados_recebidos[39],dados_recebidos[40],dados_recebidos[41],dados_recebidos[42],dados_recebidos[43],dados_recebidos[44],dados_recebidos[45],dados_recebidos[46],dados_recebidos[47],dados_recebidos[48],dados_recebidos[49],dados_recebidos[50]]
+                    "Data_LoadCell_Calibrated": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2]),float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6]),float(dados_recebidos[7]),float(dados_recebidos[8]),float(dados_recebidos[9]),float(dados_recebidos[10]),float(dados_recebidos[11]),float(dados_recebidos[12]),float(dados_recebidos[13]),float(dados_recebidos[14]),float(dados_recebidos[15]),float(dados_recebidos[16]),float(dados_recebidos[17]),float(dados_recebidos[18]),float(dados_recebidos[19]),float(dados_recebidos[20])],
+                    "Data_LoadCell_Raw": [float(dados_recebidos[21]),float(dados_recebidos[22]),float(dados_recebidos[23]),float(dados_recebidos[24]),float(dados_recebidos[25]),float(dados_recebidos[26]),float(dados_recebidos[27]),float(dados_recebidos[28]),float(dados_recebidos[29]),float(dados_recebidos[30]),float(dados_recebidos[31]),float(dados_recebidos[32]),float(dados_recebidos[33]),float(dados_recebidos[34]),float(dados_recebidos[35]),float(dados_recebidos[36]),float(dados_recebidos[37]),float(dados_recebidos[38]),float(dados_recebidos[39]),float(dados_recebidos[40]),float(dados_recebidos[41])],
+                    "Data_LoadCell_Uncertainties": [float(dados_recebidos[42]),float(dados_recebidos[43]),float(dados_recebidos[44]),float(dados_recebidos[45]),float(dados_recebidos[46]),float(dados_recebidos[47]),float(dados_recebidos[48]),float(dados_recebidos[49]),float(dados_recebidos[50]),float(dados_recebidos[51]),float(dados_recebidos[52]),float(dados_recebidos[53]),float(dados_recebidos[54]),float(dados_recebidos[55]),float(dados_recebidos[56]),float(dados_recebidos[57]),float(dados_recebidos[58]),float(dados_recebidos[59]),float(dados_recebidos[60]),float(dados_recebidos[61]),float(dados_recebidos[62])]
                 }
                 c.post(key,dados_enviar)
         except:
@@ -378,37 +451,36 @@ def Interface_Input_LoadCell_Arrays():
 
 def Interface_LoadCellCalibration():
     key="Operations_Servers_Interface/Interface_LoadCellCalibration"
-    tag_list=[
-        ""
-    ]
     while 1:
         try:
-            if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.ok"):
-                e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.ok","False"])
-                dados_enviar={
-                    "okButton": True,
-                    "stopButton": False
-                }
-                c.post(key,dados_enviar)
-                time.sleep(0.5)
-                dados_enviar={
-                    "okButton": False,
-                    "stopButton": False
-                }
-                c.post(key,dados_enviar)
-            if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.stop"):
-                e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.stop","False"])
-                dados_enviar={
-                    "okButton": False,
-                    "stopButton": True
-                }
-                c.post(key,dados_enviar)
-                time.sleep(0.5)
-                dados_enviar={
-                    "okButton": False,
-                    "stopButton": False
-                }
-                c.post(key,dados_enviar)
+            if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.atualiza"):
+                e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.atualiza","False"])
+                if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.ok")==True:
+                    e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.ok","False"])
+                    dados_enviar={
+                        "okButton": True,
+                        "stopButton": False
+                    }
+                    c.post(key,dados_enviar)
+                    time.sleep(0.5)
+                    dados_enviar={
+                        "okButton": False,
+                        "stopButton": False
+                    }
+                    c.post(key,dados_enviar)
+                if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.stop")==True:
+                    e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.stop","False"])
+                    dados_enviar={
+                        "okButton": False,
+                        "stopButton": True
+                    }
+                    c.post(key,dados_enviar)
+                    time.sleep(0.5)
+                    dados_enviar={
+                        "okButton": False,
+                        "stopButton": False
+                    }
+                    c.post(key,dados_enviar)
         except:
             pass
         time.sleep(0.5)
@@ -466,8 +538,14 @@ def Interface_RoadTests_Driver():
 
 #?
 def Interface_SamplePositioning():
-    pass
-
+    while 1:
+        try:
+            if e3.read_tag("Dados.apis.Operation_SamplePositioning.stop"):
+                e3.write_tag(["Dados.apis.Operation_SamplePositioning.stop","False"])
+                c.get("Operations_Servers_Interface/Interface_SamplePositioning?Stop_Supervisorio={}".format("True"))
+        except:
+            pass
+        time.sleep(0.5)
 
 
 def Interface_RoadTests_Driver():
@@ -475,6 +553,29 @@ def Interface_RoadTests_Driver():
     key = "Operations_Servers_Interface/Interface_RoadTests_Driver"
     resultado=c.get(key)
 
+
+
+def Interface_Open_Alcapao_PL():
+    key = "Operations_Servers_Interface/Interface_Open_Alcapao_PL"
+    while 1:
+        try:
+            if e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.atualiza")==True:
+                e3.write_tag(["Dados.apis.Operation_Open_Alcapao_PL.atualiza","False"])
+                al=e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.alcapao")
+                if al!=True:
+                    al=False
+                pl=e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.pl")
+                if pl!=True:
+                    pl=False
+                dados = {
+                    "Alcapao": al,
+                    "PL": pl
+                }
+                c.post(key, dados)
+        except:
+            pass
+        time.sleep(0.5)
+    
 
 
 async def wsocket():
@@ -493,23 +594,30 @@ async def wsocket():
                         d[1]=data[d[0]]
                 if r!=[]:
                     e3.write_tag(r)
+                e3.write_tag(["Dados.apis.heartbeat",1])
             except Exception as e:
                 print("Falha:{}{}".format(e,d[0]))
             time.sleep(0.1)
+            
 
 
 
 e3=elipse()
 c=crio("http://169.254.62.198:8001/DinaCON_WebService/")
 
-
-
 t=[]
 t.append(Thread(target=Operation_Warmup))
 t.append(Thread(target=Interface_RoadTests))
 t.append(Thread(target=Operation_SamplePositioning))
+t.append(Thread(target=Interface_SamplePositioning))
 t.append(Thread(target=Interface_FreeTest))
 t.append(Thread(target=Operation_FreeTest))
+t.append(Thread(target=Operation_LoadCellCalibration))
+t.append(Thread(target=Interface_Input_LoadCell_Arrays))
+t.append(Thread(target=Interface_LoadCellCalibration))
+t.append(Thread(target=Interface_Open_Alcapao_PL))
+
+
 
 
 
