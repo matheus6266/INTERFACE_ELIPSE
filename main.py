@@ -16,7 +16,9 @@ r_data=[
     ["User_msg","mortadela"],
     ["Falhas",""],
     ["Rolo_Inputs",""],
-    ["Calibration_Stage",""]
+    ["Calibration_Stage",""],
+    ["Distancia_Durabilidade",""],
+    ["Velocidade_Durabilidade",""]
 ]
 
 class crio:
@@ -39,13 +41,13 @@ def Operation_Coast_Down():
     key = "Operations/Operation_Coast_Down"
     
     tag_list=[
-        "Dados.apis.Operation_Coast_Down.coefPistaRolamento.t1",
-        "Dados.apis.Operation_Coast_Down.coefPistaRolamento.t2",
-        "Dados.apis.Operation_Coast_Down.coefPistaRolamento.t3",
-        "Dados.apis.Operation_Coast_Down.coefLossCurve.t1",
-        "Dados.apis.Operation_Coast_Down.coefLossCurve.t2",
-        "Dados.apis.Operation_Coast_Down.coefLossCurve.t3",
-        "Dados.apis.Operation_Coast_Down.massaAmostra"
+        "Dados.amostraselecionada.cApista",
+        "Dados.amostraselecionada.cBpista",
+        "Dados.amostraselecionada.cCpista",
+        "Dados.apis.Operation_Curve_Loss_Static.f0",
+        "Dados.apis.Operation_Curve_Loss_Static.f1",
+        "Dados.apis.Operation_Curve_Loss_Static.f2",
+        "Dados.amostraselecionada.massa"
     ]
     while 1:
         try:
@@ -54,13 +56,18 @@ def Operation_Coast_Down():
                 e3.write_tag(["Dados.apis.Operation_Coast_Down.btn","False"])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
-                    "coefPistaRolamento": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
-                    "massaAmostra": float(dados_recebidos[6]),
-                    "coefLossCurve": [float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5])]
+                    "coefPistaRolamento": [float(str(dados_recebidos[0]).replace(",",".")),float(str(dados_recebidos[1]).replace(",",".")),float(str(dados_recebidos[2]).replace(",","."))],
+                    "massaAmostra": float(str(dados_recebidos[6]).replace(",",".")),
+                    "coefLossCurve": [float(str(dados_recebidos[3]).replace(",",".")),float(str(dados_recebidos[4]).replace(",",".")),float(str(dados_recebidos[5]).replace(",","."))]
                 }
-                c.post(key,dados_enviar)
-        except:
-            pass
+                r=json.loads(c.post(key,dados_enviar))
+                e3.write_tag([
+                    ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
+                    ["Dados.amostraselecionada.cBcalculado",r["coefPistaDina_Calc"][1]],
+                    ["Dados.amostraselecionada.cCcalculado",r["coefPistaDina_Calc"][2]]]
+                )
+        except Exception as e:
+            print(e)
         time.sleep(0.5)    
 
 def Operation_Curve_Loss_Dynamic():
@@ -82,11 +89,30 @@ def Operation_Curve_Loss_Static():
         try:
             t=e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.btn")
             if t==True:
-                e3.write_tag(["Dados.apis.Operation_Curve_Loss_Static.btn","False"])
-                resultado=c.get(key)
-                e3.write_tag(["Dados.apis.Operation_Curve_Loss_Static.f0","0"],["Dados.apis.Operation_Curve_Loss_Static.f1","0"],["Dados.apis.Operation_Curve_Loss_Static.f2","0"])
-        except:
-            pass
+                e3.write_tag([["Dados.apis.Operation_Curve_Loss_Static.btn","False"],["Dados.apis.Operation_Curve_Loss_Static.f0","0"],["Dados.apis.Operation_Curve_Loss_Static.f1","0"],["Dados.apis.Operation_Curve_Loss_Static.f2","0"]])
+                r=json.loads(str(c.get(key)).replace("'","\""))
+                #r=json.loads(str("{'Array_Force_mean': [2.131791696848824, -36.75591981634028, -43.05322457675331, -47.09736131761025, -50.66178686313542, -53.94787085430391, -56.51531263216908, -60.27087413576736, -62.13168844806643, -64.83289104546871, -67.60879266438118, -71.54806258712011, -73.49645260316589, 0], 'Polynomial Coefficients': [-31.7576920234575, -0.4464380439978495, 0.0009325935555171616]}").replace("'","\""))
+                dados = [
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo1", r["Array_Force_mean"][0]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo2", r["Array_Force_mean"][1]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo3", r["Array_Force_mean"][2]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo4", r["Array_Force_mean"][3]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo5", r["Array_Force_mean"][4]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo6", r["Array_Force_mean"][5]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo7", r["Array_Force_mean"][6]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo8", r["Array_Force_mean"][7]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo9", r["Array_Force_mean"][8]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo10",r["Array_Force_mean"][9]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo11",r["Array_Force_mean"][10]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo12",r["Array_Force_mean"][11]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo13", r["Array_Force_mean"][12]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.f0", r['Polynomial Coefficients'][0]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.f1", r['Polynomial Coefficients'][1]],
+                    ["Dados.apis.Operation_Curve_Loss_Static.f2", r['Polynomial Coefficients'][2]] 
+                    ]
+                e3.write_tag(dados)
+        except Exception as e:
+            print(e)
         time.sleep(0.5)
 
 #?
@@ -115,7 +141,6 @@ def Operation_FreeTest():
                 "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
                 "coefLossCurve": [float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5])]
             }
-            print(key)
             c.post(key, dados_envia)
 
 def Operation_LoadCellCalibration():
@@ -230,7 +255,7 @@ def Operation_LoadCellCalibration():
 
 #?
 def Operation_RoadTest():
-    key="Operations/Operation_LoadCellCalibration"
+    key="Operations/Operation_RoadTests"
     tag_list=[
         "Dados.amostraselecionada.cAcalculado",
         "Dados.amostraselecionada.cBcalculado",
@@ -242,8 +267,9 @@ def Operation_RoadTest():
     ]
     while 1:
         t=e3.read_tag("Dados.apis.RoadTest.btn")
-        if t == True:            
+        if t == True:
             e3.write_tag(["Dados.apis.RoadTest.btn","False"])
+
             dados_recebidos=e3.read_tag(tag_list)
             for i in range(0,len(dados_recebidos)):
                 if dados_recebidos[i]==None:
@@ -258,6 +284,54 @@ def Operation_RoadTest():
                 "RoadVelArray": [0,0]
             }
             c.post(key, dados_envia)
+    time.sleep(0.5)
+
+def Operation_Durab_Teste():
+    key="Operations/Operation_RoadTests"
+    tag_list=[
+        "Dados.amostraselecionada.cAcalculado",
+        "Dados.amostraselecionada.cBcalculado",
+        "Dados.amostraselecionada.cCcalculado",
+        "Dados.amostraselecionada.massa",
+        "Dados.Curvadeperda.f0",
+        "Dados.Curvadeperda.f1",
+        "Dados.Curvadeperda.f2",
+        "Dados.apis.Operation_Durab_Teste.Velocidades.vel1",
+        "Dados.apis.Operation_Durab_Teste.Velocidades.vel2",
+        "Dados.apis.Operation_Durab_Teste.Velocidades.vel3",
+        "Dados.apis.Operation_Durab_Teste.Velocidades.vel4",
+        "Dados.apis.Operation_Durab_Teste.Velocidades.vel5",
+        "Dados.apis.Operation_Durab_Teste.Velocidades.vel6",
+        "Dados.apis.Operation_Durab_Teste.Distancias.Dist1",
+        "Dados.apis.Operation_Durab_Teste.Distancias.Dist2",
+        "Dados.apis.Operation_Durab_Teste.Distancias.Dist3",
+        "Dados.apis.Operation_Durab_Teste.Distancias.Dist4",
+        "Dados.apis.Operation_Durab_Teste.Distancias.Dist5",
+        "Dados.apis.Operation_Durab_Teste.Distancias.Dist6"
+    ]
+    while 1:
+        t=e3.read_tag("Dados.apis.Operation_Durab_Teste.btn")
+        if t == True:
+            e3.write_tag(["Dados.apis.Operation_Durab_Teste.btn","False"])
+
+            dados_recebidos=e3.read_tag(tag_list)
+            for i in range(0,len(dados_recebidos)):
+                if dados_recebidos[i]==None:
+                    dados_recebidos[i]=0
+            dados_envia= {
+                "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
+                "massaAmostra": float(dados_recebidos[3]),
+                "coefLossCurve": [float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6])],
+                "DurabDist": [float(dados_recebidos[13]),float(dados_recebidos[14]),float(dados_recebidos[15]),
+                             float(dados_recebidos[16]),float(dados_recebidos[17]),float(dados_recebidos[18])],
+                "DurabVel": [float(dados_recebidos[7]),float(dados_recebidos[8]),float(dados_recebidos[9]),
+                             float(dados_recebidos[10]),float(dados_recebidos[11]),float(dados_recebidos[12])],
+                "TypeTest": False,
+                "RoadVelArray": [0,0],
+
+            }
+            c.post(key, dados_envia)
+    time.sleep(0.5)
 
 def Operation_SamplePositioning():
     key = "Operations/Operation_SamplePositioning"
@@ -289,7 +363,6 @@ def Operation_Warmup():
     while 1:
         try:  
             if e3.read_tag("Dados.apis.Operation_Warmup.btn")==True:
-                print("Botao")
                 e3.write_tag(["Dados.apis.Operation_Warmup.btn",False])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
@@ -342,12 +415,11 @@ def Interface_FreeTest():
         try:
             b=e3.read_tag("Dados.apis.FreeTest.atualiza")
             if b == True:
-                e3.write_tag([["Dados.apis.FreeTest.atualiza","False"],["Dados.apis.FreeTest.StopTest","False"],["Dados.apis.FreeTest.ZeraDistancia","False"]])
+                #e3.write_tag([["Dados.apis.FreeTest.atualiza","False"],["Dados.apis.FreeTest.StopTest","False"],["Dados.apis.FreeTest.ZeraDistancia","False"]])
                 t=e3.read_tag(tag_list)
                 for i in range(0,len(t)):
                     if t[i]==None:
                         t[i]=0
-                print(t)
                 post_ope_interface_free_teste = {
                     "coefCoastDown": [float(t[0]),float(t[1]),float(t[2])],
                     "coefLossCurve": [float(t[3]),float(t[4]),float(t[5])],
@@ -362,8 +434,25 @@ def Interface_FreeTest():
                     "ZeraDistancia": t[14]==True,
                     "FreeTestType": int(t[15])
                 }
-                print(post_ope_interface_free_teste)
+                e3.write_tag([["Dados.apis.FreeTest.atualiza","False"],["Dados.apis.FreeTest.StopTest","False"],["Dados.apis.FreeTest.ZeraDistancia","False"]])
                 c.post(key, post_ope_interface_free_teste)
+                time.sleep(0.5)
+                if t[14]==True:
+                    post_ope_interface_free_teste = {
+                        "coefCoastDown": [float(t[0]),float(t[1]),float(t[2])],
+                        "coefLossCurve": [float(t[3]),float(t[4]),float(t[5])],
+                        "VelForce": t[6]==True,
+                        "SetPointVel": float(t[7]),
+                        "SetPointForce": float(t[8]),
+                        "TimeInVel": float(t[9]),
+                        "TimeInForce": float(t[10]),
+                        "EnableForceCoastDown": t[11]==True,
+                        "StartTest": t[12]==True,
+                        "StopTest": t[13]==True,
+                        "ZeraDistancia": False,
+                        "FreeTestType": int(t[15])
+                    }
+                    c.post(key, post_ope_interface_free_teste)
         except Exception as e:
             print(e)
         time.sleep(0.5)
@@ -514,6 +603,14 @@ def Interface_RoadTests():
     key="Operations_Servers_Interface/Interface_RoadTests"
     while 1:
         try:
+            if e3.read_tag("Dados.apis.Operation_Durab_Teste.start")==True:
+                e3.write_tag(["Dados.apis.Operation_Durab_Teste.start","False"])
+                post_ope_interface_free_teste = {
+                    "TestStart": True,
+                    "UserStop": False
+                }    
+                c.post(key, post_ope_interface_free_teste)
+                time.sleep(0.5)
             if e3.read_tag("Dados.apis.Operation_Warmup.atualiza")==True:
                 e3.write_tag(["Dados.apis.Operation_Warmup.atualiza","False"])
                 t=e3.read_tag("Dados.apis.Operation_Warmup.stop")
@@ -616,9 +713,11 @@ t.append(Thread(target=Operation_LoadCellCalibration))
 t.append(Thread(target=Interface_Input_LoadCell_Arrays))
 t.append(Thread(target=Interface_LoadCellCalibration))
 t.append(Thread(target=Interface_Open_Alcapao_PL))
-
-
-
+t.append(Thread(target=Operation_Coast_Down))
+t.append(Thread(target=Operation_RoadTest))
+t.append(Thread(target=Operation_Curve_Loss_Static))
+t.append(Thread(target=Interface_Curve_Loss_Static))
+t.append(Thread(target=Operation_Durab_Teste))
 
 
 for th in t:
