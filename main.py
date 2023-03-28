@@ -1,5 +1,6 @@
 from e3 import elipse
 from threading import Thread
+import threading
 import requests
 import json
 import time
@@ -33,13 +34,18 @@ class crio:
         result=requests.get(url=self.url+endpoint)
         return json.loads(result.text)
         
+def str_to_float(value):
+    return float(str(value).replace(",", "."))
 
+def api_call(key, value):
+    return json.loads(c.post(key, value))
 
 #Operations
 
-def Operation_Coast_Down():
-    key = "Operations/Operation_Coast_Down"
+def Operation_Coast_Down():                                                                     # Revisado
+    key = "Operations/Operation_Coast_Down" # Chave para a API
     
+    # Lista de tags para coletar dados
     tag_list=[
         "Dados.amostraselecionada.cApista",
         "Dados.amostraselecionada.cBpista",
@@ -49,99 +55,119 @@ def Operation_Coast_Down():
         "Dados.apis.Operation_Curve_Loss_Static.f2",
         "Dados.amostraselecionada.massa"
     ]
-    while 1:
+    # Dicionário para armazenar os dados que serão enviados
+    dados_enviar = {
+        "coefPistaRolamento": [0.0, 0.0, 0.0],
+        "massaAmostra": [0.0],
+        "coefLossCurve": [0.0, 0.0, 0.0]
+    }
+    # Loop infinito para realizar a operação Coast Down
+    while True:
         try:
+            # Verifica se o botão foi pressionado
             t=e3.read_tag("Dados.apis.Operation_Coast_Down.btn")
-            if t==True:
+            if t:
+                # Reseta o valor do botão
                 e3.write_tag(["Dados.apis.Operation_Coast_Down.btn","False"])
+                # Lê os dados das tags
                 dados_recebidos=e3.read_tag(tag_list)
-                dados_enviar={
-                    "coefPistaRolamento": [float(str(dados_recebidos[0]).replace(",",".")),float(str(dados_recebidos[1]).replace(",",".")),float(str(dados_recebidos[2]).replace(",","."))],
-                    "massaAmostra": float(str(dados_recebidos[6]).replace(",",".")),
-                    "coefLossCurve": [float(str(dados_recebidos[3]).replace(",",".")),float(str(dados_recebidos[4]).replace(",",".")),float(str(dados_recebidos[5]).replace(",","."))]
-                }
-                r=json.loads(c.post(key,dados_enviar))
+                # Processa os dados recebidos e atualiza o dicionário 'dados_enviar'
+                dados_enviar["coefPistaRolamento"] = [str_to_float(dados_recebidos[i]) for i in range(3)]
+                dados_enviar["massaAmostra"] = str_to_float(dados_recebidos[6])
+                dados_enviar["coefLossCurve"] = [str_to_float(dados_recebidos[i]) for i in range(3, 6)]
+                # Realiza chamada da API com os dados enviados e armazena a resposta
+                r= api_call(key=key, value=dados_enviar)
+                # Escreve os valores calculados no Elipse
                 e3.write_tag([
                     ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
                     ["Dados.amostraselecionada.cBcalculado",r["coefPistaDina_Calc"][1]],
                     ["Dados.amostraselecionada.cCcalculado",r["coefPistaDina_Calc"][2]]]
                 )
         except Exception as e:
-            print(e)
-        time.sleep(0.5)    
+            # Exibe a mensagem de erro em caso de falha na operação Coast Down
+            print("Erro na Operation_Coast_Down: {}".format(e))   
 
-def Operation_Curve_Loss_Dynamic():
+# Função para realizar a operação Curve Loss Dynamic
+def Operation_Curve_Loss_Dynamic():                                                              # Revisado
 
-    key = "Operations/Operation_Curve_Loss_Dynamic"
-    while 1:
+    key = "Operations/Operation_Curve_Loss_Dynamic" # Chave para a API
+    # Loop infinito para executar a operação Curve Loss Dynamic
+    while True:
         try:
+            # Verifica se o botão foi pressionado
             t=e3.read_tag("Dados.apis.Operation_Curve_Loss_Dynamic.btn")
-            if t==True:
+            if t:
+                # Reseta o valor do botão
                 e3.write_tag(["Dados.apis.Operation_Curve_Loss_Dynamic.btn","False"])
+                # Realiza chamada da API e armazena o resultado
                 resultado=c.get(key)
-        except:
-            pass
+        except Exception as e:
+            # Exibe a mensagem de erro em caso de falha na operação Curve Loss Dynamic
+            print("Erro na Operation_Curve_Loss_Dynamic: {}".format(e))
         time.sleep(0.5)    
 
-def Operation_Curve_Loss_Static():
-    key = "Operations/Operation_Curve_Loss_Static"
-    while 1:
+# Função para realizar a operação Curve Loss Static
+def Operation_Curve_Loss_Static():                                                               # Revisado
+    key = "Operations/Operation_Curve_Loss_Static" # Chave para a API
+    while True:
         try:
+            # Verifica se o botão foi pressionado
             t=e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.btn")
-            if t==True:
-                e3.write_tag([["Dados.apis.Operation_Curve_Loss_Static.btn","False"],["Dados.apis.Operation_Curve_Loss_Static.f0","0"],["Dados.apis.Operation_Curve_Loss_Static.f1","0"],["Dados.apis.Operation_Curve_Loss_Static.f2","0"]])
+            if t:
+                # Reseta o valor do botão e zera os coeficientes
+                e3.write_tag([["Dados.apis.Operation_Curve_Loss_Static.btn","False"],
+                              ["Dados.apis.Operation_Curve_Loss_Static.f0","0"],
+                              ["Dados.apis.Operation_Curve_Loss_Static.f1","0"],
+                              ["Dados.apis.Operation_Curve_Loss_Static.f2","0"]])
+                 # Realiza chamada da API e converte a resposta para um dicionário
                 r=json.loads(str(c.get(key)).replace("'","\""))
-                #r=json.loads(str("{'Array_Force_mean': [2.131791696848824, -36.75591981634028, -43.05322457675331, -47.09736131761025, -50.66178686313542, -53.94787085430391, -56.51531263216908, -60.27087413576736, -62.13168844806643, -64.83289104546871, -67.60879266438118, -71.54806258712011, -73.49645260316589, 0], 'Polynomial Coefficients': [-31.7576920234575, -0.4464380439978495, 0.0009325935555171616]}").replace("'","\""))
-                dados = [
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo1", r["Array_Force_mean"][0]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo2", r["Array_Force_mean"][1]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo3", r["Array_Force_mean"][2]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo4", r["Array_Force_mean"][3]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo5", r["Array_Force_mean"][4]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo6", r["Array_Force_mean"][5]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo7", r["Array_Force_mean"][6]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo8", r["Array_Force_mean"][7]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo9", r["Array_Force_mean"][8]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo10",r["Array_Force_mean"][9]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo11",r["Array_Force_mean"][10]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo12",r["Array_Force_mean"][11]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo13", r["Array_Force_mean"][12]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.f0", r['Polynomial Coefficients'][0]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.f1", r['Polynomial Coefficients'][1]],
-                    ["Dados.apis.Operation_Curve_Loss_Static.f2", r['Polynomial Coefficients'][2]] 
-                    ]
+                 # Monta a lista de dados com as médias dos intervalos e os coeficientes polinomiais
+                dados = [[f"Dados.apis.Operation_Curve_Loss_Static.Media_Forcas.Media_Intervalo{i+1}", r["Array_Force_mean"][i]]
+                         for i in range(13)]
+                dados += [["Dados.apis.Operation_Curve_Loss_Static.f0", r['Polynomial Coefficients'][0]],
+                          ["Dados.apis.Operation_Curve_Loss_Static.f1", r['Polynomial Coefficients'][1]],
+                          ["Dados.apis.Operation_Curve_Loss_Static.f2", r['Polynomial Coefficients'][2]]]
+                # Escreve os dados no Elipse
                 e3.write_tag(dados)
         except Exception as e:
-            print(e)
-        time.sleep(0.5)
+            print("Erro na Operation_Curve_Loss_Static: {}".format(e))
 
 #?
 def Operation_Dina_Verification():
     pass
 
-def Operation_FreeTest():
+# Função Operation_FreeTest
+def Operation_FreeTest():                                                                         # Revisado
+    # Define a chave para a operação
     key = "Operations/Operation_FreeTest"
-    tag_list=[
-        "Dados.apis.FreeTest.coefCoastDown.t1",
-        "Dados.apis.FreeTest.coefCoastDown.t2",
-        "Dados.apis.FreeTest.coefCoastDown.t3",
-        "Dados.apis.FreeTest.coefLossCurve.t1",
-        "Dados.apis.FreeTest.coefLossCurve.t2",
-        "Dados.apis.FreeTest.coefLossCurve.t3"
-    ]
-    while 1:
-        t=e3.read_tag("Dados.apis.FreeTest.iniciar")
-        if t == True:            
-            e3.write_tag(["Dados.apis.FreeTest.iniciar","False"])
-            dados_recebidos=e3.read_tag(tag_list)
-            for i in range(0,len(dados_recebidos)):
-                if dados_recebidos[i]==None:
-                    dados_recebidos[i]=0
-            dados_envia= {
-                "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
-                "coefLossCurve": [float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5])]
-            }
-            c.post(key, dados_envia)
+    # Cria a lista de tags usando list comprehensions
+    tag_list = [f"Dados.apis.FreeTest.coefCoastDown.t{i+1}" for i in range(3)]
+    tag_list += [f"Dados.apis.FreeTest.coefLossCurve.t{i+1}" for i in range(3)]
+     # Inicializa um dicionário com os coeficientes a serem enviados
+    dados_envia = {
+        "coefDinaCoastDown": [0.0, 0.0, 0.0],
+        "coefLossCurve": [0.0, 0.0, 0.0]
+    }
+    # Loop infinito
+    while True:
+        try:
+            # Lê o valor da tag "Dados.apis.FreeTest.iniciar"
+            t=e3.read_tag("Dados.apis.FreeTest.iniciar")
+            if t:
+                 # Escreve "False" na tag "Dados.apis.FreeTest.iniciar"            
+                e3.write_tag(["Dados.apis.FreeTest.iniciar","False"])
+                # Lê os valores das tags na lista tag_list
+                dados_recebidos=e3.read_tag(tag_list)
+                # Substitui os valores None por 0 na lista dados_recebidos
+                dados_recebidos = [0 if dado is None else dado for dado in dados_recebidos]
+                # Atualiza o dicionário dados_envia com os valores convertidos para float
+                dados_envia["coefDinaCoastDown"] = [float(dados_recebidos[i]) for i in range(3)],
+                dados_envia["coefLossCurve"] = [float(dados_recebidos[i]) for i in range(3, 6)]
+                # Envia os dados para o servidor usando a chave
+                c.post(key, dados_envia)
+        except Exception as e:
+            # Imprime a mensagem de erro em caso de exceção
+            print("Erro na Operation_FreeTest: {}".format(e))
 
 def Operation_LoadCellCalibration():
     key="Operations/Operation_LoadCellCalibration"
@@ -703,19 +729,19 @@ e3=elipse()
 c=crio("http://169.254.62.198:8001/DinaCON_WebService/")
 
 t=[]
-t.append(Thread(target=Operation_Warmup))
+t.append(threading.Timer(0.5, Operation_Coast_Down))
 t.append(Thread(target=Interface_RoadTests))
 t.append(Thread(target=Operation_SamplePositioning))
 t.append(Thread(target=Interface_SamplePositioning))
 t.append(Thread(target=Interface_FreeTest))
-t.append(Thread(target=Operation_FreeTest))
+t.append(threading.Timer(0.5, Operation_FreeTest))
 t.append(Thread(target=Operation_LoadCellCalibration))
 t.append(Thread(target=Interface_Input_LoadCell_Arrays))
 t.append(Thread(target=Interface_LoadCellCalibration))
 t.append(Thread(target=Interface_Open_Alcapao_PL))
 t.append(Thread(target=Operation_Coast_Down))
 t.append(Thread(target=Operation_RoadTest))
-t.append(Thread(target=Operation_Curve_Loss_Static))
+t.append(threading.Timer(0.5, Operation_Curve_Loss_Static))
 t.append(Thread(target=Interface_Curve_Loss_Static))
 t.append(Thread(target=Operation_Durab_Teste))
 
