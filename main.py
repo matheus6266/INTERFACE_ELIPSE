@@ -57,16 +57,14 @@ def Operation_Coast_Down():                                                     
     ]
     # Dicionário para armazenar os dados que serão enviados
     dados_enviar = {
-        "coefPistaRolamento": [0.0, 0.0, 0.0],
+        "coefPistaRolamento": [0.0]*3,
         "massaAmostra": [0.0],
-        "coefLossCurve": [0.0, 0.0, 0.0]
+        "coefLossCurve": [0.0]*3
     }
     # Loop infinito para realizar a operação Coast Down
     while True:
         try:
-            # Verifica se o botão foi pressionado
-            t=e3.read_tag("Dados.apis.Operation_Coast_Down.btn")
-            if t:
+            if e3.read_tag("Dados.apis.Operation_Coast_Down.btn"):
                 # Reseta o valor do botão
                 e3.write_tag(["Dados.apis.Operation_Coast_Down.btn","False"])
                 # Lê os dados das tags
@@ -94,9 +92,7 @@ def Operation_Curve_Loss_Dynamic():                                             
     # Loop infinito para executar a operação Curve Loss Dynamic
     while True:
         try:
-            # Verifica se o botão foi pressionado
-            t=e3.read_tag("Dados.apis.Operation_Curve_Loss_Dynamic.btn")
-            if t:
+            if e3.read_tag("Dados.apis.Operation_Curve_Loss_Dynamic.btn"):
                 # Reseta o valor do botão
                 e3.write_tag(["Dados.apis.Operation_Curve_Loss_Dynamic.btn","False"])
                 # Realiza chamada da API e armazena o resultado
@@ -112,8 +108,7 @@ def Operation_Curve_Loss_Static():                                              
     while True:
         try:
             # Verifica se o botão foi pressionado
-            t=e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.btn")
-            if t:
+            if e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.btn"):
                 # Reseta o valor do botão e zera os coeficientes
                 e3.write_tag([["Dados.apis.Operation_Curve_Loss_Static.btn","False"],
                               ["Dados.apis.Operation_Curve_Loss_Static.f0","0"],
@@ -151,9 +146,7 @@ def Operation_FreeTest():                                                       
     # Loop infinito
     while True:
         try:
-            # Lê o valor da tag "Dados.apis.FreeTest.iniciar"
-            t=e3.read_tag("Dados.apis.FreeTest.iniciar")
-            if t:
+            if e3.read_tag("Dados.apis.FreeTest.iniciar"):
                  # Escreve "False" na tag "Dados.apis.FreeTest.iniciar"            
                 e3.write_tag(["Dados.apis.FreeTest.iniciar","False"])
                 # Lê os valores das tags na lista tag_list
@@ -169,119 +162,56 @@ def Operation_FreeTest():                                                       
             # Imprime a mensagem de erro em caso de exceção
             print("Erro na Operation_FreeTest: {}".format(e))
 
-def Operation_LoadCellCalibration():
+def Operation_LoadCellCalibration():                                                                    # Revisado
+    # Define a chave para a operação
     key="Operations/Operation_LoadCellCalibration"
-    tag_list=[
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.h1",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t1",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t2",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t3",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t4",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t5",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t6",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t7",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t8",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t9",
-        "Dados.apis.Operation_LoadCellCalibration.P1_P10.t10",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.h1",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t1",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t2",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t3",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t4",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t5",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t6",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t7",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t8",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t9",
-        "Dados.apis.Operation_LoadCellCalibration.P11_P20.t10"
-    ]
-    while 1:
-        try:  
-            if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.btn")==True:
+    # Define a lista de tags a serem lidas
+    tag_list = ["Dados.apis.Operation_LoadCellCalibration.P1_P10.h1"]
+    tag_list += [f"Dados.apis.Operation_LoadCellCalibration.P1_P10.t{i+1}" for i in range(11)]
+    tag_list += ["Dados.apis.Operation_LoadCellCalibration.P11_P20.h1"]
+    tag_list += [f"Dados.apis.Operation_LoadCellCalibration.P11_P20.t{i+1}" for i in range(11)]
+    # Define o dicionário de dados a serem enviados para o servidor
+    data = {"P1_P10": [0.0]*11, "P11_P20": [0.0]*11}
+    # Loop infinito da operação
+    while True:
+        try:
+            # Se o botão de start foi pressionado 
+            if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.btn"):
+                # Escreve False na tag do botão para evitar que a operação seja executada novamente
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.btn",False])
+                # Lê as tags definidas na lista tag_list
                 dados_recebidos=e3.read_tag(tag_list)
-                for i in range(0,len(dados_recebidos)):
-                    if dados_recebidos[i]==None:
-                        dados_recebidos[i]=0
-                data={
-                    "P1_P10":[float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2]),float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6]),float(dados_recebidos[7]),float(dados_recebidos[8]),float(dados_recebidos[9]),float(dados_recebidos[10])],
-                    "P11_P20":[float(dados_recebidos[11]),float(dados_recebidos[12]),float(dados_recebidos[13]),float(dados_recebidos[14]),float(dados_recebidos[15]),float(dados_recebidos[16]),float(dados_recebidos[17]),float(dados_recebidos[18]),float(dados_recebidos[19]),float(dados_recebidos[20]),float(dados_recebidos[21])]
-                }
-                result=json.loads(c.post(key,data))           
-                dados=[
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_loadCell_Calibrated.t1",result["Medicao final"][0]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t2",result["Medicao final"][1]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t3",result["Medicao final"][2]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t4",result["Medicao final"][3]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t5",result["Medicao final"][4]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t6",result["Medicao final"][5]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t7",result["Medicao final"][6]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t8",result["Medicao final"][7]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t9",result["Medicao final"][8]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t10",result["Medicao final"][9]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t11",result["Medicao final"][10]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t12",result["Medicao final"][11]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t13",result["Medicao final"][12]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t14",result["Medicao final"][13]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t15",result["Medicao final"][14]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t16",result["Medicao final"][15]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t17",result["Medicao final"][16]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t18",result["Medicao final"][17]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t19",result["Medicao final"][18]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t20",result["Medicao final"][19]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t21",result["Medicao final"][20]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t1",result["Sequencia Forca "][0]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t2",result["Sequencia Forca "][1]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t3",result["Sequencia Forca "][2]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t4",result["Sequencia Forca "][3]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t5",result["Sequencia Forca "][4]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t6",result["Sequencia Forca "][5]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t7",result["Sequencia Forca "][6]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t8",result["Sequencia Forca "][7]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t9",result["Sequencia Forca "][8]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t10",result["Sequencia Forca "][9]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t11",result["Sequencia Forca "][10]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t12",result["Sequencia Forca "][11]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t13",result["Sequencia Forca "][12]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t14",result["Sequencia Forca "][13]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t15",result["Sequencia Forca "][14]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t16",result["Sequencia Forca "][15]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t17",result["Sequencia Forca "][16]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t18",result["Sequencia Forca "][17]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t19",result["Sequencia Forca "][18]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t20",result["Sequencia Forca "][19]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t21",result["Sequencia Forca "][20]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t1",result["Incerteza abs final"][0]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t2",result["Incerteza abs final"][1]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t3",result["Incerteza abs final"][2]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t4",result["Incerteza abs final"][3]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t5",result["Incerteza abs final"][4]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t6",result["Incerteza abs final"][5]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t7",result["Incerteza abs final"][6]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t8",result["Incerteza abs final"][7]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t9",result["Incerteza abs final"][8]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t10",result["Incerteza abs final"][9]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t11",result["Incerteza abs final"][10]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t12",result["Incerteza abs final"][11]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t13",result["Incerteza abs final"][12]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t14",result["Incerteza abs final"][13]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t15",result["Incerteza abs final"][14]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t16",result["Incerteza abs final"][15]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t17",result["Incerteza abs final"][16]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t18",result["Incerteza abs final"][17]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t19",result["Incerteza abs final"][18]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t20",result["Incerteza abs final"][19]],
-                    ["Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t21",result["Incerteza abs final"][20]],
-                    ["Dados.apis.Operation_LoadCellCalibration.concluido","True"]
-                ]
+                # Substitui valores None por 0
+                dados_recebidos = [0 if dados is None else dados for dados in dados_recebidos]
+                # Armazena os valores lidos no dicionário data
+                data["P1_P10"] = [dados_recebidos[i] for i in range(11)]
+                data["P11_P20"] = [dados_recebidos[i] for i in range(11, 22)]
+                # Envia os dados para o servidor utilizando a chave key
+                result=json.loads(c.post(key,data))
+                # Define as listas de sufixos e prefixos das chaves a serem escritas           
+                keys_suffixes = ["Medicao final", "Sequencia Forca ", "Incerteza abs final"]
+                keys_prefixes = ["Data_LoadCell_Calibrated", "Data_LoadCell_Raw", "Data_LoadCell_Uncertainties"]
+                # Define a lista de dados a serem escritos
+                dados = []
+                # Percorre as listas de sufixos e prefixos para criar as chaves e os valores correspondentes
+                for i in range(3):
+                    for j in range(21):
+                        key = f"Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_{keys_prefixes[i]}.t{j+1}"
+                        value = result[keys_suffixes[j]][i]
+                        dados.append([key, value])
+                # Adiciona a tag "concluido" com valor True na lista de dados a serem escritos
+                dados.append(["Dados.apis.Operation_LoadCellCalibration.concluido", "True"])
+                # Escreve as tags com os valores correspondentes
                 e3.write_tag(dados)
+        # Em caso de exceção, imprime o erro
         except Exception as e:
-            print(e)
-        time.sleep(0.5)
+            print("Erro na Operation_LoadCellCalibration: {}".format(e))
 
 #?
-def Operation_RoadTest():
+def Operation_RoadTest():                                                                                   # Revisado
+    # Chave para a API de operações de teste de estrada
     key="Operations/Operation_RoadTests"
+    # Lista de tags para obter informações relacionadas ao teste de estrada
     tag_list=[
         "Dados.amostraselecionada.cAcalculado",
         "Dados.amostraselecionada.cBcalculado",
@@ -291,29 +221,33 @@ def Operation_RoadTest():
         "Dados.Curvadeperda.f1",
         "Dados.Curvadeperda.f2",
     ]
-    while 1:
-        t=e3.read_tag("Dados.apis.RoadTest.btn")
-        if t == True:
-            e3.write_tag(["Dados.apis.RoadTest.btn","False"])
+    # Dicionário com informações a serem enviadas à API
+    dados_envia = {"coefDinaCoastDown": [0.0]*3, "massaAmostra": [0.0], "coefLossCurve": [0.0]*3,
+                    "DurabDist": [0.0]*2, "DurabVel": [1]*2, "TypeTest": True, "RoadVelArray": [0]*2}
+    # Loop infinito para executar o teste de estrada
+    while True:
+        try:
+            if e3.read_tag("Dados.apis.RoadTest.btn"):
+                # Reseta o estado do botão de teste de estrada
+                e3.write_tag(["Dados.apis.RoadTest.btn","False"])
+                # Lê os dados das tags especificadas
+                dados_recebidos=e3.read_tag(tag_list)
+                # Substitui os valores None por 0
+                dados_recebidos = [0 if dados is None else dados for dados in dados_recebidos]
+                # Atualiza o dicionário de dados a serem enviados com os dados recebidos
+                dados_envia["coefDinaCoastDown"] = [dados_recebidos[i] for i in range(3)]
+                dados_envia["massaAmostra"] = dados_recebidos[3]
+                dados_envia["coefLossCurve"] = [dados_recebidos[i] for i in range(4, 7)]
+                # Envia os dados para a API
+                c.post(key, dados_envia)
+        except Exception as e:
+            # Imprime qualquer erro ocorrido durante a execução da função
+            print("Erro na Operation_RoadTest: {}".format(e))
 
-            dados_recebidos=e3.read_tag(tag_list)
-            for i in range(0,len(dados_recebidos)):
-                if dados_recebidos[i]==None:
-                    dados_recebidos[i]=0
-            dados_envia= {
-                "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
-                "massaAmostra": float(dados_recebidos[3]),
-                "coefLossCurve": [float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6])],
-                "DurabDist": [0.0,0.0],
-                "DurabVel": [1,1],
-                "TypeTest": True,
-                "RoadVelArray": [0,0]
-            }
-            c.post(key, dados_envia)
-    time.sleep(0.5)
-
-def Operation_Durab_Teste():
+def Operation_Durab_Teste():                                                                              # Revisado
+    # Chave para a API de operações de teste de durabilidade
     key="Operations/Operation_RoadTests"
+    # Lista de tags para obter informações relacionadas ao teste de durabilidade
     tag_list=[
         "Dados.amostraselecionada.cAcalculado",
         "Dados.amostraselecionada.cBcalculado",
@@ -335,45 +269,52 @@ def Operation_Durab_Teste():
         "Dados.apis.Operation_Durab_Teste.Distancias.Dist5",
         "Dados.apis.Operation_Durab_Teste.Distancias.Dist6"
     ]
-    while 1:
-        t=e3.read_tag("Dados.apis.Operation_Durab_Teste.btn")
-        if t == True:
-            e3.write_tag(["Dados.apis.Operation_Durab_Teste.btn","False"])
-
-            dados_recebidos=e3.read_tag(tag_list)
-            for i in range(0,len(dados_recebidos)):
-                if dados_recebidos[i]==None:
-                    dados_recebidos[i]=0
-            dados_envia= {
-                "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
-                "massaAmostra": float(dados_recebidos[3]),
-                "coefLossCurve": [float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6])],
-                "DurabDist": [float(dados_recebidos[13]),float(dados_recebidos[14]),float(dados_recebidos[15]),
-                             float(dados_recebidos[16]),float(dados_recebidos[17]),float(dados_recebidos[18])],
-                "DurabVel": [float(dados_recebidos[7]),float(dados_recebidos[8]),float(dados_recebidos[9]),
-                             float(dados_recebidos[10]),float(dados_recebidos[11]),float(dados_recebidos[12])],
-                "TypeTest": False,
-                "RoadVelArray": [0,0],
-
-            }
-            c.post(key, dados_envia)
-    time.sleep(0.5)
-
-def Operation_SamplePositioning():
-    key = "Operations/Operation_SamplePositioning"
-    while 1:
+    # Dicionário com informações a serem enviadas à API
+    dados_envia = {"coefDinaCoastDown": [0.0]*3, "massaAmostra": [0.0], "coefLossCurve": [0.0]*3,
+                   "DurabDist": [0.0]*6, "DurabVel": [0.0]*6, "TypeTest": False, "RoadVelArray": [0]*2}
+    # Loop infinito para executar o teste de durabilidade
+    while True:
         try:
-            t=e3.read_tag("Dados.apis.Operation_SamplePositioning.btn")
-            if t==True:
+            # Verifica se o botão de teste de durabilidade foi acionado
+            if e3.read_tag("Dados.apis.Operation_Durab_Teste.btn"):
+                # Reseta o estado do botão de teste de durabilidade
+                e3.write_tag(["Dados.apis.Operation_Durab_Teste.btn","False"])
+                # Lê os dados das tags especificadas
+                dados_recebidos=e3.read_tag(tag_list)
+                # Substitui os valores None por 0
+                dados_recebidos = [0 if dados is None else dados for dados in dados_recebidos]
+                # Atualiza o dicionário de dados a serem enviados com os dados recebidos
+                dados_envia["coefDinaCoastDown"] = [dados_recebidos[i] for i in range(3)]
+                dados_envia["massaAmostra"] = dados_recebidos[3]
+                dados_envia["coefLossCurve"] = [dados_recebidos[i] for i in range(4, 7)]
+                dados_envia["DurabDist"] = [dados_recebidos[i] for i in range(13, 19)]
+                dados_envia["DurabVel"] = [dados_recebidos[i] for i in range(7, 13)]
+                # Envia os dados para a API
+                c.post(key, dados_envia)
+        except Exception as e:
+             # Imprime qualquer erro ocorrido durante a execução da função
+            print("Erro na Operation_Durab_Teste: {}".format(e))
+
+def Operation_SamplePositioning():                                                                          # Revisado
+    # Chave para a API de operações de posicionamento da amostra
+    key = "Operations/Operation_SamplePositioning"
+    # Loop infinito para verificar o botão de posicionamento da amostra
+    while True:
+        try:
+            if e3.read_tag("Dados.apis.Operation_SamplePositioning.btn"):
+                # Reseta o estado do botão de posicionamento da amostra
                 e3.write_tag(["Dados.apis.Operation_SamplePositioning.btn","False"])
+                # Obtém o resultado da operação de posicionamento da amostra a partir da API
                 resultado=c.get(key)
-        except:
-            pass
-        time.sleep(0.5)
+        except Exception as e:
+            # Imprime qualquer erro ocorrido durante a execução da função
+            print("Erro na Operation_SamplePositioning: {}".format(e))
 
 
-def Operation_Warmup():
+def Operation_Warmup():                                                                                 # Revisado
+    # Chave para a API de operações de aquecimento
     key = "Operations/Operation_Warmup"
+    # Lista de tags para obter informações relacionadas ao aquecimento
     tag_list=[
         "Dados.apis.Operation_Warmup.warmupVelocity.t1",
         "Dados.apis.Operation_Warmup.warmupVelocity.t2",
@@ -386,19 +327,24 @@ def Operation_Warmup():
         "Dados.apis.Operation_Warmup.warmupTime.t4",
         "Dados.apis.Operation_Warmup.warmupTime.t5"
     ]
-    while 1:
-        try:  
-            if e3.read_tag("Dados.apis.Operation_Warmup.btn")==True:
+    # Dicionário com informações a serem enviadas à API
+    dados_enviar ={"warmupVelocity": [0.0]*5, "warmupTime": [0.0]*5}
+    # Loop infinito para executar o aquecimento
+    while True:
+        try:
+            if e3.read_tag("Dados.apis.Operation_Warmup.btn"):
+                # Reseta o estado do botão de aquecimento
                 e3.write_tag(["Dados.apis.Operation_Warmup.btn",False])
+                # Lê os dados das tags especificadas
                 dados_recebidos=e3.read_tag(tag_list)
-                dados_enviar={
-                    "warmupVelocity": [int(dados_recebidos[0]),int(dados_recebidos[1]),int(dados_recebidos[2]),int(dados_recebidos[3]),int(dados_recebidos[4])],
-                    "warmupTime": [int(dados_recebidos[5]),int(dados_recebidos[6]),int(dados_recebidos[7]),int(dados_recebidos[8]),int(dados_recebidos[9])]
-                }
+                 # Atualiza o dicionário de dados a serem enviados com os dados recebidos
+                dados_enviar["warmupVelocity"] = [dados_recebidos[i] for i in range(5)]
+                dados_enviar["warmupTime"] = [dados_recebidos[i] for i in range(5, 10)]
+                # Envia os dados para a API
                 c.post(key,dados_enviar)
         except Exception as e:
-            print(e)
-        time.sleep(0.5)
+            # Imprime qualquer erro ocorrido durante a execução da função
+            print("Erro na Operation_Warmup: {}".format(e))
 
 
 
@@ -406,19 +352,22 @@ def Operation_Warmup():
 #Server Interface
 
 
-def Interface_Curve_Loss_Static():
-    while 1:
+def Interface_Curve_Loss_Static():                                                              # Revisado
+    # Loop infinito para executar a curva de perda estática
+    while True:
         try:
+            # Verifica se o botão de parada da curva de perda estática foi acionado
             if e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.stop"):
                 e3.write_tag(["Dados.apis.Operation_Curve_Loss_Static.stop","False"])
                 c.get("Operations_Servers_Interface/Interface_Curve_Loss_Static?User_Stop=True")
-        except:
-            pass
-        time.sleep(0.5)
-
+        except Exception as e:
+            # Imprime qualquer erro ocorrido durante a execução da função
+            print("Erro na Operation_Warmup: {}".format(e))
 
 def Interface_FreeTest():
+    # Define uma chave para a API
     key =  "Operations_Servers_Interface/Interface_FreeTest"
+    # Lista de tags usadas para a leitura dos dados
     tag_list = [
         "Dados.apis.FreeTest.coefCoastDown.t1",
         "Dados.apis.FreeTest.coefCoastDown.t2",
@@ -437,171 +386,136 @@ def Interface_FreeTest():
         "Dados.apis.FreeTest.ZeraDistancia",
         "Dados.apis.FreeTest.FreeTestType"
     ]
-    while 1:
+    # Dicionário com os valores iniciais dos dados a serem enviados
+    dados_enviar = {"coefCoastDown": [0.0]*3, "coefLossCurve": [0.0]*3, "VelForce": False, "SetPointVel": 0.0,
+                                     "SetPointForce": 0.0, "TimeInVel": 0.0, "TimeInForce": 0.0, "EnableForceCoastDown": False,
+                                     "StartTest": False, "StopTest": False, "ZeraDistancia": False, "FreeTestType": 0}
+    # Loop infinito
+    while True:
         try:
-            b=e3.read_tag("Dados.apis.FreeTest.atualiza")
-            if b == True:
-                #e3.write_tag([["Dados.apis.FreeTest.atualiza","False"],["Dados.apis.FreeTest.StopTest","False"],["Dados.apis.FreeTest.ZeraDistancia","False"]])
-                t=e3.read_tag(tag_list)
-                for i in range(0,len(t)):
-                    if t[i]==None:
-                        t[i]=0
-                post_ope_interface_free_teste = {
-                    "coefCoastDown": [float(t[0]),float(t[1]),float(t[2])],
-                    "coefLossCurve": [float(t[3]),float(t[4]),float(t[5])],
-                    "VelForce": t[6]==True,
-                    "SetPointVel": float(t[7]),
-                    "SetPointForce": float(t[8]),
-                    "TimeInVel": float(t[9]),
-                    "TimeInForce": float(t[10]),
-                    "EnableForceCoastDown": t[11]==True,
-                    "StartTest": t[12]==True,
-                    "StopTest": t[13]==True,
-                    "ZeraDistancia": t[14]==True,
-                    "FreeTestType": int(t[15])
-                }
+            # Verifica se é necessário atualizar os dados
+            if e3.read_tag("Dados.apis.FreeTest.atualiza"):
+                # Lê os dados das tags especificadas na lista 'tag_list'
+                dados_recebidos=e3.read_tag(tag_list)
+                # Substitui os valores None por 0 na lista 'dados_recebidos'
+                dados_recebidos = [0 if dados is None else dados for dados in dados_recebidos]
+                 # Atualiza os valores do dicionário 'dados_enviar' com base nos dados recebidos
+                dados_enviar["coefCoastDown"] = [dados_recebidos[i] for i in range(3)]
+                dados_enviar["coefLossCurve"] = [dados_recebidos[i] for i in range(3, 6)]
+                dados_enviar["VelForce"] = dados_recebidos[6]==True,
+                dados_enviar["SetPointVel"] = float(dados_recebidos[7]),
+                dados_enviar["SetPointForce"] = float(dados_recebidos[8]),
+                dados_enviar["TimeInVel"] = float(dados_recebidos[9]),
+                dados_enviar["TimeInForce"] = float(dados_recebidos[10]),
+                dados_enviar["EnableForceCoastDown"] = dados_recebidos[11]==True,
+                dados_enviar["StartTest"] = dados_recebidos[12]==True,
+                dados_enviar["StopTest"] = dados_recebidos[13]==True,
+                dados_enviar["ZeraDistancia"] = dados_recebidos[14]==True,
+                dados_enviar["FreeTestType"] = int(dados_recebidos[15])
+                # Define as tags para serem escritas como Falso
                 e3.write_tag([["Dados.apis.FreeTest.atualiza","False"],["Dados.apis.FreeTest.StopTest","False"],["Dados.apis.FreeTest.ZeraDistancia","False"]])
-                c.post(key, post_ope_interface_free_teste)
+                # Envia os dados atualizados para a API
+                c.post(key, dados_enviar)
+                # Aguarda meio segundo
                 time.sleep(0.5)
-                if t[14]==True:
-                    post_ope_interface_free_teste = {
-                        "coefCoastDown": [float(t[0]),float(t[1]),float(t[2])],
-                        "coefLossCurve": [float(t[3]),float(t[4]),float(t[5])],
-                        "VelForce": t[6]==True,
-                        "SetPointVel": float(t[7]),
-                        "SetPointForce": float(t[8]),
-                        "TimeInVel": float(t[9]),
-                        "TimeInForce": float(t[10]),
-                        "EnableForceCoastDown": t[11]==True,
-                        "StartTest": t[12]==True,
-                        "StopTest": t[13]==True,
-                        "ZeraDistancia": False,
-                        "FreeTestType": int(t[15])
-                    }
-                    c.post(key, post_ope_interface_free_teste)
+                # Verifica se a tag 'ZeraDistancia' está como Verdadeira
+                if dados_recebidos[14]==True:
+                    dados_enviar["coefCoastDown"] = [dados_recebidos[i] for i in range(3)]
+                    dados_enviar["coefLossCurve"] = [dados_recebidos[i] for i in range(3, 6)]
+                    dados_enviar["VelForce"] = dados_recebidos[6]==True,
+                    dados_enviar["SetPointVel"] = float(dados_recebidos[7]),
+                    dados_enviar["SetPointForce"] = float(dados_recebidos[8]),
+                    dados_enviar["TimeInVel"] = float(dados_recebidos[9]),
+                    dados_enviar["TimeInForce"] = float(dados_recebidos[10]),
+                    dados_enviar["EnableForceCoastDown"] = dados_recebidos[11]==True,
+                    dados_enviar["StartTest"] = dados_recebidos[12]==True,
+                    dados_enviar["StopTest"] = dados_recebidos[13]==True,
+                    dados_enviar["ZeraDistancia"] = False,
+                    dados_enviar["FreeTestType"] = int(dados_recebidos[15])
+                    # Envia os dados atualizados para a API
+                    c.post(key, dados_enviar)
         except Exception as e:
-            print(e)
-        time.sleep(0.5)
+            print("Erro na Interface_FreeTest: {}".format(e))
+
 
 def Interface_Input_LoadCell_Arrays():
+    # Define uma chave para a API
     key="Operations_Servers_Interface/Interface_Input_LoadCell_Arrays"
-    tag_list=[
-        "Dados.apis.Operation_LoadCellCalibration.Data_loadCell_Calibrated.t1",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t2",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t3",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t4",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t5",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t6",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t7",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t8",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t9",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t10",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t11",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t12",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t13",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t14",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t15",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t16",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t17",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t18",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t19",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t20",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Calibrated.t21",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t1",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t2",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t3",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t4",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t5",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t6",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t7",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t8",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t9",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t10",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t11",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t12",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t13",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t14",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t15",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t16",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t17",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t18",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t19",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t20",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Raw.t21",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t1",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t2",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t3",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t4",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t5",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t6",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t7",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t8",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t9",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t10",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t11",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t12",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t13",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t14",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t15",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t16",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t17",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t18",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t19",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t20",
-        "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t21"
-    ]   
-    while 1:
+    # Prefixos das chaves usadas para a leitura dos dados
+    keys_prefixes = ["Data_LoadCell_Calibrated", "Data_LoadCell_Raw", "Data_LoadCell_Uncertainties"]
+    # Lista de tags vazia e dicionário com os valores iniciais dos dados a serem enviados
+    tag_list = []
+    dados_enviar = {"Data_LoadCell_Calibrated": [0.0]*21,
+                    "Data_LoadCell_Raw":[0.0]*21,
+                    "Data_LoadCell_Uncertainties": [0.0]*21}
+    # Popula a lista de tags com base nos prefixos e nos índices
+    for i in range(3):
+        for j in range(21):
+            key = f"Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_{keys_prefixes[i]}.t{j+1}"
+            tag_list.append(key)
+    # Loop infinito   
+    while True:
         try:
+            # Verifica se é necessário enviar os dados de calibração
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.envia_calibracao"):
+                # Define a tag 'envia_calibracao' como Falso
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.envia_calibracao",False])
+                # Lê os dados das tags especificadas na lista 'tag_list'
                 dados_recebidos=e3.read_tag(tag_list)
-                dados_enviar={
-                    "Data_LoadCell_Calibrated": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2]),float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6]),float(dados_recebidos[7]),float(dados_recebidos[8]),float(dados_recebidos[9]),float(dados_recebidos[10]),float(dados_recebidos[11]),float(dados_recebidos[12]),float(dados_recebidos[13]),float(dados_recebidos[14]),float(dados_recebidos[15]),float(dados_recebidos[16]),float(dados_recebidos[17]),float(dados_recebidos[18]),float(dados_recebidos[19]),float(dados_recebidos[20])],
-                    "Data_LoadCell_Raw": [float(dados_recebidos[21]),float(dados_recebidos[22]),float(dados_recebidos[23]),float(dados_recebidos[24]),float(dados_recebidos[25]),float(dados_recebidos[26]),float(dados_recebidos[27]),float(dados_recebidos[28]),float(dados_recebidos[29]),float(dados_recebidos[30]),float(dados_recebidos[31]),float(dados_recebidos[32]),float(dados_recebidos[33]),float(dados_recebidos[34]),float(dados_recebidos[35]),float(dados_recebidos[36]),float(dados_recebidos[37]),float(dados_recebidos[38]),float(dados_recebidos[39]),float(dados_recebidos[40]),float(dados_recebidos[41])],
-                    "Data_LoadCell_Uncertainties": [float(dados_recebidos[42]),float(dados_recebidos[43]),float(dados_recebidos[44]),float(dados_recebidos[45]),float(dados_recebidos[46]),float(dados_recebidos[47]),float(dados_recebidos[48]),float(dados_recebidos[49]),float(dados_recebidos[50]),float(dados_recebidos[51]),float(dados_recebidos[52]),float(dados_recebidos[53]),float(dados_recebidos[54]),float(dados_recebidos[55]),float(dados_recebidos[56]),float(dados_recebidos[57]),float(dados_recebidos[58]),float(dados_recebidos[59]),float(dados_recebidos[60]),float(dados_recebidos[61]),float(dados_recebidos[62])]
-                }
+                # Atualiza os valores do dicionário 'dados_enviar' com base nos dados recebidos
+                dados_enviar["Data_LoadCell_Calibrated"] = [dados_recebidos[i] for i in range(21)]
+                dados_enviar["Data_LoadCell_Raw"] = [dados_recebidos[i] for i in range(21, 42)]
+                dados_enviar["Data_LoadCell_Uncertainties"] = [dados_recebidos[i] for i in range(42, 63)]
+                # Envia os dados atualizados para a API
                 c.post(key,dados_enviar)
-        except:
-            pass
+        # Exibe a exceção e a mensagem de erro, caso ocorra
+        except Exception as e:
+            print("Erro na Interface_Input_LoadCell_Arrays: {}".format(e))
 
 def Interface_LoadCellCalibration():
+    # Define uma chave para a API
     key="Operations_Servers_Interface/Interface_LoadCellCalibration"
-    while 1:
+    # Dicionário com os valores iniciais dos botões a serem enviados
+    dados_enviar = {"okButton": False, "stopButton": False}
+    while True:
         try:
+            # Verifica se a tag 'atualiza' está ativada
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.atualiza"):
+                # Define a tag 'atualiza' como Falso
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.atualiza","False"])
-                if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.ok")==True:
+                # Verifica se a tag 'ok' está ativada
+                if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.ok"):
+                    # Define a tag 'ok' como Falso
                     e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.ok","False"])
-                    dados_enviar={
-                        "okButton": True,
-                        "stopButton": False
-                    }
+                    # Atualiza os valores do dicionário 'dados_enviar' e envia os dados para a API
+                    dados_enviar["okButton"] = True
+                    dados_enviar["stopButton"] = False
                     c.post(key,dados_enviar)
+                    # Aguarda 0,5 segundos antes de resetar os valores do dicionário 'dados_enviar'
                     time.sleep(0.5)
-                    dados_enviar={
-                        "okButton": False,
-                        "stopButton": False
-                    }
+                    dados_enviar["okButton"] = False
+                    dados_enviar["stopButton"] = False
+                    # Verifica se a tag 'stop' está ativada
                     c.post(key,dados_enviar)
-                if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.stop")==True:
+                if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.stop"):
+                    # Define a tag 'stop' como Falso
                     e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.stop","False"])
-                    dados_enviar={
-                        "okButton": False,
-                        "stopButton": True
-                    }
+                    # Atualiza os valores do dicionário 'dados_enviar' e envia os dados para a API
+                    dados_enviar["okButton"] = False
+                    dados_enviar["stopButton"] = True
                     c.post(key,dados_enviar)
+                    # Aguarda 0,5 segundos antes de resetar os valores do dicionário 'dados_enviar'
                     time.sleep(0.5)
-                    dados_enviar={
-                        "okButton": False,
-                        "stopButton": False
-                    }
+                    dados_enviar["okButton"] = False
+                    dados_enviar["stopButton"] = False
                     c.post(key,dados_enviar)
-        except:
-            pass
-        time.sleep(0.5)
+        except Exception as e:
+            # Exibe a exceção e a mensagem de erro, caso ocorra
+            print("Erro na Interface_LoadCellCalibration: {}".format(e))
 
 
 def Interface_Output_test():
+    # Define a list of tags to be used in this function
     tag_list=[
         "man_auto_test",
         "vel_torq_test",
@@ -610,15 +524,20 @@ def Interface_Output_test():
         "time_in_torq",
         "time_in_vel"
     ]
-    while 1:
+    # Infinite loop to continuously check and update the interface
+    while True:
         try:
+            # Check if the interface needs to be updated
             if e3.read_tag("Dados.apis.Interface_Output_test.atualiza"):
+                # Set the update flag to False
                 e3.write_tag(["Dados.apis.Interface_Output_test.atualiza","False"])
+                # Read data from tags
                 dados_recebidos=e3.read_tag(tag_list)
+                # Update the interface with the data received
                 c.get("Operations_Servers_Interface/Interface_Output_test?man_auto_test={}&vel_torq_test={}&setpoint-vel={}&setpoint_torq={}&time_in_torq={}&time_in_vel={}".format(dados_recebidos[0],dados_recebidos[1],dados_recebidos[2],dados_recebidos[3],dados_recebidos[4],dados_recebidos[5]))
-        except:
-            pass
-        time.sleep(0.5)
+        # Handle exceptions and print an error message
+        except Exception as e:
+            print("Erro na Interface_Output_test: {}".format(e))
 
 #?        
 def Interface_Read_Datalog():
@@ -626,34 +545,43 @@ def Interface_Read_Datalog():
 
 #?
 def Interface_RoadTests():
+    # Define a chave para acessar a interface dos testes de estrada
     key="Operations_Servers_Interface/Interface_RoadTests"
-    while 1:
+    # Inicializa o dicionário para enviar dados para a interface
+    dados_enviar = {"TestStart": False, "UserStop": False}
+    # Loop infinito para atualizar continuamente a interface
+    while True:
         try:
-            if e3.read_tag("Dados.apis.Operation_Durab_Teste.start")==True:
+            # Verifica se o teste de durabilidade deve ser iniciado
+            if e3.read_tag("Dados.apis.Operation_Durab_Teste.start"):
+                # Define o valor da tag de início como Falso
                 e3.write_tag(["Dados.apis.Operation_Durab_Teste.start","False"])
-                post_ope_interface_free_teste = {
-                    "TestStart": True,
-                    "UserStop": False
-                }    
-                c.post(key, post_ope_interface_free_teste)
+                # Atualiza os dados a serem enviados
+                dados_enviar["TestStart"] = True
+                dados_enviar["UserStop"] = False
+                # Envia os dados para a interface    
+                c.post(key, dados_enviar)
                 time.sleep(0.5)
-            if e3.read_tag("Dados.apis.Operation_Warmup.atualiza")==True:
+                # Verifica se é necessário atualizar a tag de aquecimento
+            if e3.read_tag("Dados.apis.Operation_Warmup.atualiza"):
+                # Define o valor da tag de atualização como Falso
                 e3.write_tag(["Dados.apis.Operation_Warmup.atualiza","False"])
+                # Lê o valor da tag de parada
                 t=e3.read_tag("Dados.apis.Operation_Warmup.stop")
-                post_ope_interface_free_teste = {
-                    "TestStart": False,
-                    "UserStop": t
-                }    
-                c.post(key, post_ope_interface_free_teste)
+                # Atualiza os dados a serem enviados
+                dados_enviar["TestStart"] = False
+                dados_enviar["UserStop"] = t
+                # Envia os dados para a interface   
+                c.post(key, dados_enviar)
                 time.sleep(0.5)
-                post_ope_interface_free_teste = {
-                    "TestStart": False,
-                    "UserStop": False
-                }    
-                c.post(key, post_ope_interface_free_teste)
-        except:
-            pass
-        time.sleep(0.5)
+                # Reinicia os valores no dicionário de dados_enviar
+                dados_enviar["TestStart"] = False
+                dados_enviar["UserStop"] = False
+                # Envia os dados atualizados para a interface    
+                c.post(key, dados_enviar)
+        # Trata exceções e imprime uma mensagem de erro
+        except Exception as e:
+            print("Erro na Interface_RoadTests: {}".format(e))
 
 #?
 def Interface_RoadTests_Driver():
@@ -661,14 +589,18 @@ def Interface_RoadTests_Driver():
 
 #?
 def Interface_SamplePositioning():
-    while 1:
+    # Loop infinito para atualizar continuamente a interface
+    while True:
+        # Verifica se a tag de parada da operação de posicionamento da amostra está ativa
         try:
             if e3.read_tag("Dados.apis.Operation_SamplePositioning.stop"):
+                # Define o valor da tag de parada como Falso
                 e3.write_tag(["Dados.apis.Operation_SamplePositioning.stop","False"])
+                # Atualiza a interface com o valor de parada do supervisório
                 c.get("Operations_Servers_Interface/Interface_SamplePositioning?Stop_Supervisorio={}".format("True"))
-        except:
-            pass
-        time.sleep(0.5)
+        # Trata exceções e imprime uma mensagem de erro
+        except Exception as e:
+            print("Erro na Interface_SamplePositioning: {}".format(e))
 
 
 def Interface_RoadTests_Driver():
@@ -679,48 +611,66 @@ def Interface_RoadTests_Driver():
 
 
 def Interface_Open_Alcapao_PL():
+    # Define a chave para acessar a interface de abertura do alçapão e PL
     key = "Operations_Servers_Interface/Interface_Open_Alcapao_PL"
-    while 1:
+    # Inicializa o dicionário para enviar dados para a interface
+    dados_enviar = {"Alcapao": al, "PL": pl}
+    # Loop infinito para atualizar continuamente a interface
+    while True:
         try:
-            if e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.atualiza")==True:
+            # Verifica se a tag de atualização da operação de abertura do alçapão e PL está ativa
+            if e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.atualiza"):
+                # Define o valor da tag de atualização como Falso
                 e3.write_tag(["Dados.apis.Operation_Open_Alcapao_PL.atualiza","False"])
+                 # Lê o valor da tag alcapao
                 al=e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.alcapao")
+                # Verifica se o valor de alcapao não é verdadeiro e atribui o valor Falso
                 if al!=True:
                     al=False
+                # Lê o valor da tag PL
                 pl=e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.pl")
+                # Verifica se o valor de PL não é verdadeiro e atribui o valor Falso
                 if pl!=True:
                     pl=False
-                dados = {
-                    "Alcapao": al,
-                    "PL": pl
-                }
-                c.post(key, dados)
-        except:
-            pass
-        time.sleep(0.5)
+                # Atualiza os dados a serem enviados
+                dados_enviar["Alcapao"] = al
+                dados_enviar["PL"] = pl
+                # Envia os dados para a interface
+                c.post(key, dados_enviar)
+        # Trata exceções e imprime uma mensagem de erro
+        except Exception as e:
+            print("Erro na Interface_Open_Alcapao_PL: {}".format(e))
     
 
 
 async def wsocket():
+    # Estabelece uma conexão WebSocket com o endereço e porta especificados
     async with websockets.connect('ws://169.254.62.198:6123') as websocket:
-        time.sleep(5)
-        i=0
-        while 1:
-            await websocket.send("{}".format(i))
+        # Aguarda 5 segundos antes de iniciar o loop
+        await asyncio.sleep(5)
+        # Loop infinito para comunicação WebSocket
+        while True:
+            # Envia uma mensagem para o servidor WebSocket
+            await websocket.send("{}".format(0))
+             # Aguarda a resposta do servidor WebSocket
             response = await websocket.recv()
             try:
+                # Carrega os dados da resposta em formato JSON
                 data=json.loads(response)
-                r=[]
-                for d in r_data:
-                    if data[d[0]] != d[1]:
-                        r.append(["Dados.apis.websocket.{}".format(d[0]),data[d[0]]])
-                        d[1]=data[d[0]]
-                if r!=[]:
+                # Cria a lista 'r' com base nos dados recebidos e compara com os dados anteriores
+                r = [["Dados.apis.websocket.{}".format(d[0]), data[d[0]]] for d in r_data if data[d[0]] != d[1]]
+                # Se a lista 'r' não estiver vazia, escreve as tags atualizadas
+                if r:
                     e3.write_tag(r)
+                # Atualiza os valores anteriores na lista 'r_data'
+                for d in r_data:
+                    d[1] = data[d[0]]
+                # Atualiza o valor da tag de heartbeat
                 e3.write_tag(["Dados.apis.heartbeat",1])
             except Exception as e:
                 print("Falha:{}{}".format(e,d[0]))
-            time.sleep(0.1)
+            # Aguarda 0,1 segundo antes de reiniciar o loop
+            await asyncio.sleep(0.1)
             
 
 
@@ -730,20 +680,21 @@ c=crio("http://169.254.62.198:8001/DinaCON_WebService/")
 
 t=[]
 t.append(threading.Timer(0.5, Operation_Coast_Down))
-t.append(Thread(target=Interface_RoadTests))
-t.append(Thread(target=Operation_SamplePositioning))
-t.append(Thread(target=Interface_SamplePositioning))
-t.append(Thread(target=Interface_FreeTest))
+t.append(threading.Timer(0.5, Interface_RoadTests))
+t.append(threading.Timer(0.5, Operation_SamplePositioning))
+t.append(threading.Timer(0.5, Interface_SamplePositioning))
+t.append(threading.Timer(0.5, Interface_FreeTest))
 t.append(threading.Timer(0.5, Operation_FreeTest))
-t.append(Thread(target=Operation_LoadCellCalibration))
-t.append(Thread(target=Interface_Input_LoadCell_Arrays))
-t.append(Thread(target=Interface_LoadCellCalibration))
-t.append(Thread(target=Interface_Open_Alcapao_PL))
-t.append(Thread(target=Operation_Coast_Down))
-t.append(Thread(target=Operation_RoadTest))
+t.append(threading.Timer(0.5, Operation_LoadCellCalibration))
+t.append(threading.Timer(0.5, Interface_Input_LoadCell_Arrays))
+t.append(threading.Timer(0.5, Interface_LoadCellCalibration))
+t.append(threading.Timer(0.5, Interface_Open_Alcapao_PL))
+t.append(threading.Timer(0.5, Operation_RoadTest))
 t.append(threading.Timer(0.5, Operation_Curve_Loss_Static))
-t.append(Thread(target=Interface_Curve_Loss_Static))
-t.append(Thread(target=Operation_Durab_Teste))
+t.append(threading.Timer(0.5, Interface_Curve_Loss_Static))
+t.append(threading.Timer(0.5, Operation_Durab_Teste))
+t.append(threading.Timer(0.5, Operation_Warmup))
+t.append(threading.Timer(0.5, Interface_Output_test))
 
 
 for th in t:
