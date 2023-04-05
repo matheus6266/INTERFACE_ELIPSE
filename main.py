@@ -7,6 +7,8 @@ import asyncio
 import websockets
 requests.packages.urllib3.disable_warnings()
 
+send_calibration=False
+
 r_data=[
     ["Velocidade_kmh",99999],
     ["Forca_calibrada",999999],
@@ -19,7 +21,6 @@ r_data=[
     ["Calibration_Stage",""],
     ["Distancia_Durabilidade",""],
     ["Velocidade_Durabilidade",""],
-    ["acertos",""],
     ["Controle_Remoto",""]
 ]
 
@@ -178,7 +179,7 @@ def Operation_LoadCellCalibration():
         "Dados.apis.Operation_LoadCellCalibration.P11_P20.t10"
     ]
     while 1:
-        try:  
+        try:
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.btn")==True:
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.btn",False])
                 dados_recebidos=e3.read_tag(tag_list)
@@ -269,9 +270,9 @@ def Operation_RoadTest():
         "Dados.amostraselecionada.cBcalculado",
         "Dados.amostraselecionada.cCcalculado",
         "Dados.amostraselecionada.massa",
-        "Dados.Curvadeperda.f0",
-        "Dados.Curvadeperda.f1",
-        "Dados.Curvadeperda.f2",
+        "Dados.apis.Operation_Curve_Loss_Static.f0",
+        "Dados.apis.Operation_Curve_Loss_Static.f1",
+        "Dados.apis.Operation_Curve_Loss_Static.f2"
     ]
     while 1:
         t=e3.read_tag("Dados.apis.RoadTest.btn")
@@ -289,7 +290,7 @@ def Operation_RoadTest():
                 "DurabDist": [0.0,0.0],
                 "DurabVel": [1,1],
                 "TypeTest": True,
-                "RoadVelArray": [0,0]
+                "RoadVelArray": [0 for a in range(0,60*60*24)]
             }
             c.post(key, dados_envia)
     time.sleep(0.5)
@@ -335,7 +336,7 @@ def Operation_Durab_Teste():
                 "DurabVel": [float(dados_recebidos[7]),float(dados_recebidos[8]),float(dados_recebidos[9]),
                              float(dados_recebidos[10]),float(dados_recebidos[11]),float(dados_recebidos[12])],
                 "TypeTest": False,
-                "RoadVelArray": [0,0],
+                "RoadVelArray": [0 for a in range(0,60*60*24)],
 
             }
             c.post(key, dados_envia)
@@ -398,9 +399,9 @@ def Interface_Curve_Loss_Static():
                 c.get("Operations_Servers_Interface/Interface_Curve_Loss_Static?User_Stop=0")
             if e3.read_tag("Dados.apis.reset")==True:
                 e3.write_tag(["Dados.apis.reset","False"])
-                c.get("Operations_Servers_Interface/Interface_Reset?Reset_Supervisorio=1")
+                c.get("Operations_Servers_Interface/Interface_Reset_Supervisorio?Reset_Supervisorio=1")
                 time.sleep(0.5)
-                c.get("Operations_Servers_Interface/Interface_Reset?Reset_Supervisorio=0")
+                c.get("Operations_Servers_Interface/Interface_Reset_Supervisorio?Reset_Supervisorio=0")
         except Exception as e:
             print(e)
         time.sleep(0.5)
@@ -541,7 +542,10 @@ def Interface_Input_LoadCell_Arrays():
     ]   
     while 1:
         try:
-            if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.envia_calibracao"):
+            global send_calibration
+            if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.envia_calibracao") or send_calibration==True:
+                send_calibration=False
+                print("call sent")
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.envia_calibracao",False])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
@@ -622,7 +626,8 @@ def Interface_RoadTests():
                 e3.write_tag(["Dados.apis.Operation_Durab_Teste.start","False"])
                 post_ope_interface_free_teste = {
                     "TestStart": True,
-                    "UserStop": False
+                    "UserStop": False,
+                    "TestEnd": False
                 }    
                 c.post(key, post_ope_interface_free_teste)
                 time.sleep(0.5)
@@ -631,13 +636,30 @@ def Interface_RoadTests():
                 t=e3.read_tag("Dados.apis.Operation_Warmup.stop")
                 post_ope_interface_free_teste = {
                     "TestStart": False,
-                    "UserStop": t
+                    "UserStop": t,
+                    "TestEnd": False
                 }    
                 c.post(key, post_ope_interface_free_teste)
                 time.sleep(0.5)
                 post_ope_interface_free_teste = {
                     "TestStart": False,
-                    "UserStop": False
+                    "UserStop": False,
+                    "TestEnd": False
+                }    
+                c.post(key, post_ope_interface_free_teste)
+            if e3.read_tag("Dados.apis.RoadTest.end")==True:
+                e3.write_tag(["Dados.apis.RoadTest.end","False"])
+                post_ope_interface_free_teste = {
+                    "TestStart": False,
+                    "UserStop": False,
+                    "TestEnd": True
+                }    
+                c.post(key, post_ope_interface_free_teste)
+                time.sleep(0.5)
+                post_ope_interface_free_teste = {
+                    "TestStart": False,
+                    "UserStop": False,
+                    "TestEnd": False
                 }    
                 c.post(key, post_ope_interface_free_teste)
         except:
@@ -691,28 +713,34 @@ def Interface_Open_Alcapao_PL():
 
 
 async def wsocket():
-    try:
-        async with websockets.connect('ws://169.254.62.198:6123') as websocket:
-            time.sleep(5)
-            i=0
-            while 1:
-                await websocket.send("{}".format(i))
-                response = await websocket.recv()
-                try:
-                    data=json.loads(response)
-                    r=[]
-                    for d in r_data:
-                        if data[d[0]] != d[1]:
-                            r.append(["Dados.apis.websocket.{}".format(d[0]),data[d[0]]])
-                            d[1]=data[d[0]]
-                    if r!=[]:
-                        e3.write_tag(r)
-                    e3.write_tag(["Dados.apis.heartbeat",1])
-                except Exception as e:
-                    print("Falha:{}{}".format(e,d[0]))
-                time.sleep(0.1)
-    except:
-        time.sleep(0.5)    
+    while 1:
+        try:
+            async with websockets.connect('ws://169.254.62.198:6123') as websocket:
+                time.sleep(5)
+                i=0
+                while 1:
+                    await websocket.send("{}".format(i))
+                    response = await websocket.recv()
+                    try:
+                        data=json.loads(response)
+                        r=[]
+                        for d in r_data:
+                            if d[0] == "Forca_calibrada" and d[1]==0:
+                                if d[1]==0:
+                                    global send_calibration
+                                    send_calibration=True
+                            if 1:
+                                r.append(["Dados.apis.websocket.{}".format(d[0]),data[d[0]]])
+                                d[1]=data[d[0]]
+                        if r!=[]:
+                            e3.write_tag(r)
+                        e3.write_tag(["Dados.apis.heartbeat",1],True)
+                    except Exception as e:
+                        print("Falha:{}{}".format(e,d[0]))
+                    time.sleep(0.1)
+        except:
+            pass
+        time.sleep(10)
 
 
 
@@ -745,9 +773,33 @@ for th in t:
 async def echo(websocket):
     async for message in websocket:
         try:
-            await websocket.send("{\"Velocidade_kmh\":"+str(r_data[0][1])+",\"start\":"+str((int(r_data[12][1])&4)==4).lower()+",\"stop\":"+str((int(r_data[12][1])&8)==8).lower()+",\"end\":"+str((int(r_data[12][1])&2)==2).lower()+"}")
-            e3.write_tag(["Dados.apis.websocket.acertos",json.loads(message)["acertos"]])
-            e3.write_tag(["Dados.apis.websocket.progresso",json.loads(message)["progresso"]])
+            await websocket.send("{\"Velocidade_kmh\":"+str(r_data[0][1])+",\"start\":"+str((int(r_data[11][1])&4)==4).lower()+",\"stop\":"+str((int(r_data[11][1])&8)==8).lower()+",\"end\":"+str((int(r_data[11][1])&2)==2).lower()+"}")
+            mess=json.loads(message)
+            try:
+                e3.write_tag(["Dados.apis.websocket.acertos",mess["acertos"]])
+            except:
+                pass
+            try:
+                e3.write_tag(["Dados.apis.websocket.progresso",mess["progresso"]])
+            except:
+                pass
+            try:
+                if mess["testend"]:
+                    post_ope_interface_free_teste = {
+                        "TestStart": False,
+                        "UserStop": False,
+                        "TestEnd": True
+                    }    
+                    c.post("Operations_Servers_Interface/Interface_RoadTests", post_ope_interface_free_teste)
+                    time.sleep(0.5)
+                    post_ope_interface_free_teste = {
+                        "TestStart": False,
+                        "UserStop": False,
+                        "TestEnd": False
+                    }    
+                    c.post("Operations_Servers_Interface/Interface_RoadTests", post_ope_interface_free_teste)
+            except:
+                pass
         except Exception as e:
             print(e)
 
