@@ -5,6 +5,7 @@ import json
 import time
 import asyncio
 import websockets
+
 requests.packages.urllib3.disable_warnings()
 
 send_calibration=False
@@ -67,9 +68,7 @@ def Operation_Coast_Down():
                     "coefLossCurve": [float(str(dados_recebidos[3]).replace(",",".")),float(str(dados_recebidos[4]).replace(",",".")),float(str(dados_recebidos[5]).replace(",","."))]
                 }
                 r=c.post(key,dados_enviar)
-                print(r)
                 r=json.loads(r)
-                print(r)
                 e3.write_tag([
                     ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
                     ["Dados.amostraselecionada.cBcalculado",r["coefPistaDina_Calc"][1]],
@@ -400,7 +399,7 @@ def Interface_Curve_Loss_Static():
             if e3.read_tag("Dados.apis.reset")==True:
                 e3.write_tag(["Dados.apis.reset","False"])
                 c.get("Operations_Servers_Interface/Interface_Reset_Supervisorio?Reset_Supervisorio=1")
-                time.sleep(0.5)
+                time.sleep(4)
                 c.get("Operations_Servers_Interface/Interface_Reset_Supervisorio?Reset_Supervisorio=0")
         except Exception as e:
             print(e)
@@ -545,7 +544,6 @@ def Interface_Input_LoadCell_Arrays():
             global send_calibration
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.envia_calibracao") or send_calibration==True:
                 send_calibration=False
-                print("call sent")
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.envia_calibracao",False])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
