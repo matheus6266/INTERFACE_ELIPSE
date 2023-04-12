@@ -76,6 +76,43 @@ def Operation_Coast_Down():
                 )
         except Exception as e:
             print(e)
+        time.sleep(0.5)
+
+def Operation_Coast_Down_R2():
+    key = "Operations/Operation_Coast_Down_R02"
+    
+    tag_list=[
+        "Dados.amostraselecionada.cApista",
+        "Dados.amostraselecionada.cBpista",
+        "Dados.amostraselecionada.cCpista",
+        "Dados.apis.Operation_Curve_Loss_Static.f0",
+        "Dados.apis.Operation_Curve_Loss_Static.f1",
+        "Dados.apis.Operation_Curve_Loss_Static.f2",
+        "Dados.amostraselecionada.massa"
+    ]
+    while 1:
+        try:
+            t=e3.read_tag("Dados.apis.Operation_Coast_Down.btn")
+            if t==True:
+                e3.write_tag(["Dados.apis.Operation_Coast_Down.btn","False"])
+                dados_recebidos=e3.read_tag(tag_list)                
+                for r in range(0,len(dados_recebidos)):
+                    if dados_recebidos[r]=='':
+                        dados_recebidos[r]=0
+                dados_enviar={
+                    "coefPistaRolamento": [float(str(dados_recebidos[0]).replace(",",".")),float(str(dados_recebidos[1]).replace(",",".")),float(str(dados_recebidos[2]).replace(",","."))],
+                    "massaAmostra": float(str(dados_recebidos[6]).replace(",",".")),
+                    "coefLossCurve": [float(str(dados_recebidos[3]).replace(",",".")),float(str(dados_recebidos[4]).replace(",",".")),float(str(dados_recebidos[5]).replace(",","."))]
+                }
+                r=c.post(key,dados_enviar)
+                r=json.loads(r)
+                e3.write_tag([
+                    ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
+                    ["Dados.amostraselecionada.cBcalculado",r["coefPistaDina_Calc"][1]],
+                    ["Dados.amostraselecionada.cCcalculado",r["coefPistaDina_Calc"][2]]]
+                )
+        except Exception as e:
+            print(e)
         time.sleep(0.5)    
 
 def Operation_Curve_Loss_Dynamic():
@@ -756,7 +793,8 @@ t.append(Thread(target=Operation_LoadCellCalibration))
 t.append(Thread(target=Interface_Input_LoadCell_Arrays))
 t.append(Thread(target=Interface_LoadCellCalibration))
 t.append(Thread(target=Interface_Open_Alcapao_PL))
-t.append(Thread(target=Operation_Coast_Down))
+#t.append(Thread(target=Operation_Coast_Down))
+t.append(Thread(target=Operation_Coast_Down_R2))
 t.append(Thread(target=Operation_RoadTest))
 t.append(Thread(target=Operation_Curve_Loss_Static))
 t.append(Thread(target=Interface_Curve_Loss_Static))
