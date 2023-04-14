@@ -5,6 +5,8 @@ import json
 import time
 import asyncio
 import websockets
+import PySimpleGUI as sg
+import time
 
 requests.packages.urllib3.disable_warnings()
 
@@ -25,6 +27,25 @@ r_data=[
     ["Controle_Remoto",""]
 ]
 
+time_screen_diagnostics = 0
+time_Operation_Warmup = 0
+time_Interface_RoadTests = 0
+time_Operation_SamplePositioning = 0
+time_Interface_SamplePositioning = 0
+time_Interface_FreeTest = 0
+time_Operation_FreeTest = 0
+time_Operation_LoadCellCalibration = 0
+time_Interface_Input_LoadCell_Arrays = 0
+time_Interface_LoadCellCalibration = 0
+time_Interface_Open_Alcapao_PL = 0
+time_Operation_Coast_Down = 0
+time_Operation_Coast_Down_R2 = 0
+time_Operation_RoadTest = 0
+time_Operation_Curve_Loss_Static = 0
+time_Interface_Curve_Loss_Static = 0
+time_Operation_Durab_Teste = 0
+time_web_socket = 0
+
 class crio:
     def __init__(self,url):
             self.url=url
@@ -42,6 +63,7 @@ class crio:
 #Operations
 
 def Operation_Coast_Down():
+    global time_Operation_Coast_Down
     key = "Operations/Operation_Coast_Down"
     
     tag_list=[
@@ -54,6 +76,7 @@ def Operation_Coast_Down():
         "Dados.amostraselecionada.massa"
     ]
     while 1:
+        start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_Coast_Down.btn")
             if t==True:
@@ -77,8 +100,11 @@ def Operation_Coast_Down():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Operation_Coast_Down = time.time() - start_time
+        
 
 def Operation_Coast_Down_R2():
+    global time_Operation_Coast_Down_R2
     key = "Operations/Operation_Coast_Down_R02"
     
     tag_list=[
@@ -91,6 +117,7 @@ def Operation_Coast_Down_R2():
         "Dados.amostraselecionada.massa"
     ]
     while 1:
+        start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_Coast_Down.btn")
             if t==True:
@@ -113,10 +140,10 @@ def Operation_Coast_Down_R2():
                 )
         except Exception as e:
             print(e)
-        time.sleep(0.5)    
+        time.sleep(0.5)
+        time_Operation_Coast_Down_R2 = time.time() - start_time    
 
 def Operation_Curve_Loss_Dynamic():
-
     key = "Operations/Operation_Curve_Loss_Dynamic"
     while 1:
         try:
@@ -126,11 +153,13 @@ def Operation_Curve_Loss_Dynamic():
                 resultado=c.get(key)
         except:
             pass
-        time.sleep(0.5)    
+        time.sleep(0.5)   
 
 def Operation_Curve_Loss_Static():
+    global time_Operation_Curve_Loss_Static
     key = "Operations/Operation_Curve_Loss_Static"
     while 1:
+        start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.btn")
             if t==True:
@@ -159,12 +188,14 @@ def Operation_Curve_Loss_Static():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Operation_Curve_Loss_Static = time.time() - start_time 
 
 #?
 def Operation_Dina_Verification():
     pass
 
 def Operation_FreeTest():
+    global time_Operation_FreeTest
     key = "Operations/Operation_FreeTest"
     tag_list=[
         "Dados.apis.FreeTest.coefCoastDown.t1",
@@ -175,6 +206,7 @@ def Operation_FreeTest():
         "Dados.apis.FreeTest.coefLossCurve.t3"
     ]
     while 1:
+        start_time = time.time()
         t=e3.read_tag("Dados.apis.FreeTest.iniciar")
         if t == True:            
             e3.write_tag(["Dados.apis.FreeTest.iniciar","False"])
@@ -187,8 +219,10 @@ def Operation_FreeTest():
                 "coefLossCurve": [float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5])]
             }
             c.post(key, dados_envia)
+            time_Operation_FreeTest = time.time() - start_time 
 
 def Operation_LoadCellCalibration():
+    global time_Operation_LoadCellCalibration
     key="Operations/Operation_LoadCellCalibration"
     tag_list=[
         "Dados.apis.Operation_LoadCellCalibration.P1_P10.h1",
@@ -215,6 +249,7 @@ def Operation_LoadCellCalibration():
         "Dados.apis.Operation_LoadCellCalibration.P11_P20.t10"
     ]
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.btn")==True:
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.btn",False])
@@ -297,9 +332,11 @@ def Operation_LoadCellCalibration():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Operation_LoadCellCalibration = time.time() - start_time 
 
 #?
 def Operation_RoadTest():
+    global time_Operation_RoadTest
     key="Operations/Operation_RoadTests"
     tag_list=[
         "Dados.amostraselecionada.cAcalculado",
@@ -311,6 +348,7 @@ def Operation_RoadTest():
         "Dados.apis.Operation_Curve_Loss_Static.f2"
     ]
     while 1:
+        start_time = time.time()
         t=e3.read_tag("Dados.apis.RoadTest.btn")
         if t == True:
             e3.write_tag(["Dados.apis.RoadTest.btn","False"])
@@ -330,8 +368,10 @@ def Operation_RoadTest():
             }
             c.post(key, dados_envia)
     time.sleep(0.5)
+    time_Operation_RoadTest = time.time() - start_time
 
 def Operation_Durab_Teste():
+    global time_Operation_Durab_Teste
     key="Operations/Operation_RoadTests"
     tag_list=[
         "Dados.amostraselecionada.cAcalculado",
@@ -355,6 +395,7 @@ def Operation_Durab_Teste():
         "Dados.apis.Operation_Durab_Teste.Distancias.Dist6"
     ]
     while 1:
+        start_time = time.time()
         t=e3.read_tag("Dados.apis.Operation_Durab_Teste.btn")
         if t == True:
             e3.write_tag(["Dados.apis.Operation_Durab_Teste.btn","False"])
@@ -377,10 +418,13 @@ def Operation_Durab_Teste():
             }
             c.post(key, dados_envia)
     time.sleep(0.5)
+    time_Operation_Durab_Teste = time.time() - start_time
 
 def Operation_SamplePositioning():
+    global time_Operation_SamplePositioning
     key = "Operations/Operation_SamplePositioning"
     while 1:
+        start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_SamplePositioning.btn")
             if t==True:
@@ -389,9 +433,11 @@ def Operation_SamplePositioning():
         except:
             pass
         time.sleep(0.5)
+        time_Operation_SamplePositioning = time.time() - start_time
 
 
 def Operation_Warmup():
+    global time_Operation_Warmup
     key = "Operations/Operation_Warmup"
     tag_list=[
         "Dados.apis.Operation_Warmup.warmupVelocity.t1",
@@ -406,6 +452,7 @@ def Operation_Warmup():
         "Dados.apis.Operation_Warmup.warmupTime.t5"
     ]
     while 1:
+        start_time = time.time()
         try:  
             if e3.read_tag("Dados.apis.Operation_Warmup.btn")==True:
                 e3.write_tag(["Dados.apis.Operation_Warmup.btn",False])
@@ -418,15 +465,16 @@ def Operation_Warmup():
         except Exception as e:
             print(e)
         time.sleep(0.5)
-
-
+        time_Operation_Warmup = time.time() - start_time
 
 
 #Server Interface
 
 
 def Interface_Curve_Loss_Static():
+    global time_Interface_Curve_Loss_Static
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.stop")==True:
                 e3.write_tag(["Dados.apis.Operation_Curve_Loss_Static.stop","False"])
@@ -441,9 +489,11 @@ def Interface_Curve_Loss_Static():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Interface_Curve_Loss_Static = time.time() - start_time
 
 
 def Interface_FreeTest():
+    global time_Interface_FreeTest
     key =  "Operations_Servers_Interface/Interface_FreeTest"
     tag_list = [
         "Dados.apis.FreeTest.coefCoastDown.t1",
@@ -464,6 +514,7 @@ def Interface_FreeTest():
         "Dados.apis.FreeTest.FreeTestType"
     ]
     while 1:
+        start_time = time.time()
         try:
             b=e3.read_tag("Dados.apis.FreeTest.atualiza")
             if b == True:
@@ -508,8 +559,10 @@ def Interface_FreeTest():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Interface_FreeTest = time.time() - start_time
 
 def Interface_Input_LoadCell_Arrays():
+    global time_Interface_Input_LoadCell_Arrays
     key="Operations_Servers_Interface/Interface_Input_LoadCell_Arrays"
     tag_list=[
         "Dados.apis.Operation_LoadCellCalibration.Data_loadCell_Calibrated.t1",
@@ -577,6 +630,7 @@ def Interface_Input_LoadCell_Arrays():
         "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t21"
     ]   
     while 1:
+        start_time = time.time()
         try:
             global send_calibration
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.envia_calibracao") or send_calibration==True:
@@ -591,10 +645,13 @@ def Interface_Input_LoadCell_Arrays():
                 c.post(key,dados_enviar)
         except:
             pass
+        time_Interface_Input_LoadCell_Arrays = time.time() - start_time
 
 def Interface_LoadCellCalibration():
+    global time_Interface_LoadCellCalibration
     key="Operations_Servers_Interface/Interface_LoadCellCalibration"
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.atualiza"):
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.atualiza","False"])
@@ -627,6 +684,7 @@ def Interface_LoadCellCalibration():
         except:
             pass
         time.sleep(0.5)
+        time_Interface_LoadCellCalibration = time.time() - start_time
 
 
 def Interface_Output_test():
@@ -654,8 +712,10 @@ def Interface_Read_Datalog():
 
 #?
 def Interface_RoadTests():
+    global time_Interface_RoadTests
     key="Operations_Servers_Interface/Interface_RoadTests"
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_Durab_Teste.start")==True:
                 e3.write_tag(["Dados.apis.Operation_Durab_Teste.start","False"])
@@ -700,14 +760,16 @@ def Interface_RoadTests():
         except:
             pass
         time.sleep(0.5)
-
+        time_Interface_RoadTests = time.time() - start_time
 #?
 def Interface_RoadTests_Driver():
     pass
 
 #?
 def Interface_SamplePositioning():
+    global time_Interface_SamplePositioning
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_SamplePositioning.stop"):
                 e3.write_tag(["Dados.apis.Operation_SamplePositioning.stop","False"])
@@ -715,6 +777,7 @@ def Interface_SamplePositioning():
         except:
             pass
         time.sleep(0.5)
+        time_Interface_SamplePositioning = time.time() - start_time
 
 
 def Interface_RoadTests_Driver():
@@ -725,8 +788,10 @@ def Interface_RoadTests_Driver():
 
 
 def Interface_Open_Alcapao_PL():
+    global time_Interface_Open_Alcapao_PL
     key = "Operations_Servers_Interface/Interface_Open_Alcapao_PL"
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.atualiza")==True:
                 e3.write_tag(["Dados.apis.Operation_Open_Alcapao_PL.atualiza","False"])
@@ -744,11 +809,14 @@ def Interface_Open_Alcapao_PL():
         except:
             pass
         time.sleep(0.5)
+        time_Interface_Open_Alcapao_PL = time.time() - start_time
     
 
 
 async def wsocket():
+    global time_web_socket
     while 1:
+        start_time = time.time()
         try:
             async with websockets.connect('ws://169.254.62.198:6123') as websocket:
                 time.sleep(5)
@@ -776,7 +844,149 @@ async def wsocket():
         except:
             pass
         time.sleep(10)
+        time_web_socket = time.time() - start_time
 
+def screen_diagnostics():
+
+    trigger = 30
+    size = (940, 300)
+
+    frame_layout_1 = [
+                        [sg.Text("Status Operação: Checagem", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Checagem", background_color="#344E61")],
+                        [sg.Text("Status Operação: Warm Up", background_color="#344E61")],
+                        [sg.Text("Status Operação: Curva de Perda", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Curva de Perda", background_color="#344E61")],
+                        [sg.Text("Status Operação: Posicionamento da Amostra", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Posicionamento da Amostra", background_color="#344E61")],
+                        [sg.Text("Status Operação: Coast Down", background_color="#344E61")],
+                        [sg.Text("Status Operação: Teste Livre", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Teste Livre", background_color="#344E61")],
+                        [sg.Text("Status Operação: Teste de Durabilidade", background_color="#344E61")],
+                        [sg.Text("Status Operação: Teste de Pista", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Teste de Pista", background_color="#344E61")]
+                        ]
+
+    frame_layout_2 = [
+                        [sg.Text("Tempo de Execução:", key = "-TIME_OPERATION_CHECAGEM-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_CHECAGEM-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_OPERATION_WARMUP-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_OPERATION_CURVA_PERDA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_CURVA_PERDA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_POSICIONAMENTO_DA_AMOSTRA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_POSICIONAMENTO_AMOSTRA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_COAST_DOWN-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "TIME_TESTE_LIVRE-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_TESTE_LIVRE-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "TIME_DURABILIDADE", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_PISTA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_PISTA-", background_color="#344E61")]
+                    ]
+    
+    frame_layout_3 = [
+        [sg.Text("Good", key = "-STATUS_OPERATION_CHECAGEM-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_CHECAGEM-")],
+        [sg.Text("Good", key = "-STATUS_OPERATION_WARMUP-")],
+        [sg.Text("Good", key = "-STATUS_OPERATION_CURVA_PERDA-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_CURVA_PERDA-")],
+        [sg.Text("Good", key = "-STATUS_POSICIONAMENTO_DA_AMOSTRA-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-")],
+        [sg.Text("Good", key = "-STATUS_COAST_DOWN-")],
+        [sg.Text("Good", key = "-STATUS_TESTE_LIVRE-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_TESTE_LIVRE-")],
+        [sg.Text("Good", key = "-STATUS_DURABILIDADE-")],
+        [sg.Text("Good", key = "-STATUS_PISTA-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_PISTA-")]
+    ]
+
+    layout = [
+        [sg.Frame("Canal de Comunicação", frame_layout_1, font="Helvetica 12", title_color="white", background_color="#344E61",
+                  expand_x=True, expand_y=True),
+        sg.Frame("Tempo de Execução (segundos)", frame_layout_2, font="Helvetica 12", title_color="white", background_color="#344E61",
+                  expand_x=True, expand_y=True),
+        sg.Frame("Status do Canal", frame_layout_3, font="Helvetica 12", title_color="white", background_color="#344E61",
+                  expand_x=True, expand_y=True)]
+        
+    ]
+
+    window = sg.Window('Diagnóistico da Comunicação Labview', layout, size=size,
+                        background_color="#344E61", enable_close_attempted_event=False)
+    
+    while True:
+        event, values = window.read(timeout=10)
+
+        if event == sg.WIN_CLOSED :
+            break
+
+        window["-TIME_OPERATION_CHECAGEM-"].update(f"Tempo de Execução: {round(time_Operation_LoadCellCalibration,5)}")
+        window["-TIME_INTERFACE_CHECAGEM-"].update(f"Tempo de Execução: {round(time_Interface_LoadCellCalibration, 5)}")
+        window["-TIME_OPERATION_WARMUP-"].update(f"Tempo de Execução: {round(time_Operation_Warmup, 5)}")
+        window["-TIME_OPERATION_CURVA_PERDA-"].update(f"Tempo de Execução: {round(time_Operation_Curve_Loss_Static, 5)}")
+        window["-TIME_INTERFACE_CURVA_PERDA-"].update(f"Tempo de Execução: {round(time_Operation_Curve_Loss_Static, 5)}")
+        window["-TIME_POSICIONAMENTO_DA_AMOSTRA-"].update(f"Tempo de Execução: {round(time_Operation_SamplePositioning, 5)}")
+        window["-TIME_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update(f"Tempo de Execução: {round(time_Interface_SamplePositioning, 5)}")
+        window["-TIME_COAST_DOWN-"].update(f"Tempo de Execução: {round(time_Operation_Coast_Down, 5)}")
+        window["TIME_TESTE_LIVRE-"].update(f"Tempo de Execução: {round(time_Operation_FreeTest, 5)}")
+        window["-TIME_INTERFACE_TESTE_LIVRE-"].update(f"Tempo de Execução: {round(time_Interface_FreeTest, 5)}")
+        window["TIME_DURABILIDADE"].update(f"Tempo de Execução: {round(time_Operation_Durab_Teste, 5)}")
+        window["-TIME_PISTA-"].update(f"Tempo de Execução: {round(time_Operation_RoadTest, 5)}")
+        window["-TIME_INTERFACE_PISTA-"].update(f"Tempo de Execução: {round(time_Operation_RoadTest, 5)}")
+
+
+        if time_Operation_LoadCellCalibration > trigger:
+            window["-STATUS_OPERATION_CHECAGEM-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_OPERATION_CHECAGEM-"].update(background_color="green")
+        if time_Interface_LoadCellCalibration > trigger:
+            window["-STATUS_INTERFACE_CHECAGEM-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_CHECAGEM-"].update(background_color="green")
+        if time_Operation_Warmup > trigger:
+            window["-STATUS_OPERATION_WARMUP-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_OPERATION_WARMUP-"].update(background_color="green")
+        if time_Operation_Curve_Loss_Static > trigger:
+            window["-STATUS_OPERATION_CURVA_PERDA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_OPERATION_CURVA_PERDA-"].update(background_color="green")
+        if time_Interface_Curve_Loss_Static > trigger:
+            window["-STATUS_INTERFACE_CURVA_PERDA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_CURVA_PERDA-"].update(background_color="green")
+        if time_Operation_SamplePositioning > trigger:
+            window["-STATUS_POSICIONAMENTO_DA_AMOSTRA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_POSICIONAMENTO_DA_AMOSTRA-"].update(background_color="green")
+        if time_Interface_SamplePositioning > trigger:
+            window["-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update(background_color="green")
+        if time_Operation_Coast_Down > trigger:
+            window["-STATUS_COAST_DOWN-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_COAST_DOWN-"].update(background_color="green")
+        if time_Operation_FreeTest > trigger:
+            window["-STATUS_TESTE_LIVRE-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_TESTE_LIVRE-"].update(background_color="green")
+        if time_Interface_FreeTest > trigger:
+            window["-STATUS_INTERFACE_TESTE_LIVRE-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_TESTE_LIVRE-"].update(background_color="green")
+        if time_Operation_Durab_Teste > trigger:
+            window["-STATUS_DURABILIDADE-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_DURABILIDADE-"].update(background_color="green")
+        if time_Operation_RoadTest > trigger:
+            window["-STATUS_PISTA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_PISTA-"].update(background_color="green")
+        if time_Interface_RoadTests > trigger:
+            window["-STATUS_INTERFACE_PISTA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_PISTA-"].update(background_color="green")
+        
+        
 
 
 e3=elipse()
@@ -799,6 +1009,7 @@ t.append(Thread(target=Operation_RoadTest))
 t.append(Thread(target=Operation_Curve_Loss_Static))
 t.append(Thread(target=Interface_Curve_Loss_Static))
 t.append(Thread(target=Operation_Durab_Teste))
+t.append(Thread(target=screen_diagnostics))
 
 
 for th in t:
@@ -855,5 +1066,6 @@ loop.run_forever()
 #        asyncio.get_event_loop().run_until_complete(wsocket())
 #    except:
 #        pass
-for th in t:
-    th.join()
+
+#for th in t:
+    #th.join()
