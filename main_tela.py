@@ -5,166 +5,9 @@ import json
 import time
 import asyncio
 import websockets
+import PySimpleGUI as sg
+import time
 import win32timezone
-import numpy as np
-
-
-mensagem_teste={
-    "PolCoefsReportArray_Force": [
-        [
-            106.5338577449528,
-            -1.48725090752238,
-            0.0612099127218051
-        ],
-        [
-            112.8828802734295,
-            -1.859140793256678,
-            0.06709914871386276
-        ],
-        [
-            115.8317783678892,
-            -1.955355314255652,
-            0.06772241408327145
-        ],
-        [
-            114.0388577681192,
-            -1.912418723472847,
-            0.06757629824469839
-        ]
-    ],
-    "PolCoefsReportArray_Time": [
-        [
-            0,
-            0,
-            0
-        ],
-        [
-            102.2591014453209,
-            -1.64440145095758,
-            0.006830959380051297
-        ],
-        [
-            102.8787776139776,
-            -1.65607378880008,
-            0.006888812361749867
-        ],
-        [
-            103.174736260157,
-            -1.664257840263656,
-            0.006936910725031192
-        ]
-    ],
-    "MaxDif_Force_Pista": [
-        -2.425708384836042,
-        -4.223200379051121,
-        -5.635571669102575,
-        -6.544179277548949,
-        -7.001287604747489,
-        -7.104438496252953,
-        -6.853631952065257,
-        -6.248867972184428,
-        -5.290146556610466,
-        -3.977467705343315,
-        -2.310831418383088,
-        -0.2154789091268867,
-        2.310188437620013,
-        5.213670696601753,
-        8.494967867818559
-    ],
-    "Std_Dev_Force": [
-        0.3637096992299655,
-        0.2430602751611258,
-        0.15809401462245,
-        0.1380875452542768,
-        0.1786967349360268,
-        0.2362442527170711,
-        0.2907282503455892,
-        0.3368667478130354,
-        0.3737457660089097,
-        0.4021720702435522,
-        0.424077494501336,
-        0.4424598610119391,
-        0.4614215948375745,
-        0.4860384711728244,
-        0.5218324912405894
-    ],
-    "Std_Dev_Force_Percent": [
-        0.3090105592811925,
-        0.1868502046437105,
-        0.1084039790680856,
-        0.08370666703233483,
-        0.09532145997745912,
-        0.1107348684884012,
-        0.1198433077657913,
-        0.1224027838833111,
-        0.120095810091132,
-        0.1147180728250985,
-        0.1078211878173455,
-        0.1006894749373828,
-        0.09437607944877019,
-        0.08971155774845271,
-        0.08726098147183506
-    ],
-    "MaxDif_Time_Pista": [
-        0.6220826336175271,
-        0.772384030338273,
-        0.774527871577515,
-        0.6935700528860096,
-        0.5771464525217862,
-        0.4624977804451884,
-        0.3534436068207931,
-        0.2570963953311534,
-        0.1759740859885426,
-        0.1097424867210517,
-        0.05680144954588862,
-        0.01514602635020346,
-        -0.01720668486024568,
-        -0.04203242400031204,
-        -0.06084070032206679
-    ],
-    "Std_Dev_Time": [
-        0.07540463629449738,
-        0.04129682183486871,
-        0.02139499732990685,
-        0.01460131967798076,
-        0.01462189682817036,
-        0.01492773542829787,
-        0.01421212874127262,
-        0.01279887503591457,
-        0.01110782487488664,
-        0.009420384908855653,
-        0.007892337937940445,
-        0.006596530657542032,
-        0.005556193218146272,
-        0.004765062915085582,
-        0.004197866135196894
-    ],
-    "Std_Dev_Time_Percent": [
-        0.3084610282281247,
-        0.1867065168052587,
-        0.1084440054292747,
-        0.08371625948794968,
-        0.09526926914604104,
-        0.1106863028996918,
-        0.1198272558930858,
-        0.122422618058193,
-        0.1201435557883877,
-        0.114781469475326,
-        0.1078871942647769,
-        0.1007461696551898,
-        0.09441402561754941,
-        0.08972513158336456,
-        0.08724947800745515
-    ]
-}
-
-
-
-
-
-
-
-
 
 requests.packages.urllib3.disable_warnings()
 
@@ -185,6 +28,25 @@ r_data=[
     ["Controle_Remoto",""]
 ]
 
+time_screen_diagnostics = 0
+time_Operation_Warmup = 0
+time_Interface_RoadTests = 0
+time_Operation_SamplePositioning = 0
+time_Interface_SamplePositioning = 0
+time_Interface_FreeTest = 0
+time_Operation_FreeTest = 0
+time_Operation_LoadCellCalibration = 0
+time_Interface_Input_LoadCell_Arrays = 0
+time_Interface_LoadCellCalibration = 0
+time_Interface_Open_Alcapao_PL = 0
+time_Operation_Coast_Down = 0
+time_Operation_Coast_Down_R2 = 0
+time_Operation_RoadTest = 0
+time_Operation_Curve_Loss_Static = 0
+time_Interface_Curve_Loss_Static = 0
+time_Operation_Durab_Teste = 0
+time_web_socket = 0
+
 class crio:
     def __init__(self,url):
             self.url=url
@@ -198,83 +60,11 @@ class crio:
         return json.loads(result.text)
         
 
-def coastd(massa_veiculo,coef_pista_a,coef_pista_b,coef_pista_c,data):
-    velocidade_padrao = np.array(list(range(25, 101, 5)))
-
-    # Agora, 'data' é uma variável que contém o conteúdo do arquivo json. Você pode trabalhar com ela como faria com um dicionário normal em Python.
-    coef_1_a = data["PolCoefsReportArray_Force"][1][0]
-    coef_1_b = data["PolCoefsReportArray_Force"][1][1]
-    coef_1_c = data["PolCoefsReportArray_Force"][1][2]
-    coef_2_a = data["PolCoefsReportArray_Force"][2][0]
-    coef_2_b = data["PolCoefsReportArray_Force"][2][1]
-    coef_2_c = data["PolCoefsReportArray_Force"][2][2]
-    coef_3_a = data["PolCoefsReportArray_Force"][3][0]
-    coef_3_b = data["PolCoefsReportArray_Force"][3][1]
-    coef_3_c = data["PolCoefsReportArray_Force"][3][2]
-
-    dt_max = data["MaxDif_Time_Pista"]
-    df_max = data["MaxDif_Force_Pista"]
-
-    # Cálculo Pista
-    forca_pista = (coef_pista_c*(velocidade_padrao*velocidade_padrao) + coef_pista_b*velocidade_padrao + coef_pista_a)
-    tempo_pista = (1.015*massa_veiculo)*((5/3.6)/forca_pista)
-
-    # Cálculo Ensaio 1
-    forca_1 = (coef_1_c*(velocidade_padrao*velocidade_padrao) + coef_1_b*velocidade_padrao + coef_1_a)
-    tempo_1 = (1.015*massa_veiculo)*((5/3.6)/forca_1)
-
-    # Cálculo Ensaio 2
-    forca_2 = (coef_2_c*(velocidade_padrao*velocidade_padrao) + coef_2_b*velocidade_padrao + coef_2_a)
-    tempo_2 = (1.015*massa_veiculo)*((5/3.6)/forca_2)
-
-    # Cálculo Ensaio 3
-    forca_3 = (coef_3_c*(velocidade_padrao*velocidade_padrao) + coef_3_b*velocidade_padrao + coef_3_a)
-    tempo_3 = (1.015*massa_veiculo)*((5/3.6)/forca_3)
-
-
-    ################### ENVIAR ##########################
-
-    # Teste de Pista
-    f_pista = list(reversed(forca_pista))
-    t_pista = list(reversed(tempo_pista))
-
-    # Ensaio 1
-    f_teste1 = list(reversed(forca_1))
-    t_teste1 = list(reversed(tempo_1))
-
-    # Ensaio 2
-    f_teste2 = list(reversed(forca_2))
-    t_teste2 = list(reversed(tempo_2))
-
-    # Ensaio 3
-    f_teste3 = list(reversed(forca_3))
-    t_teste3 = list(reversed(tempo_3))
-
-    # Delta Tempo Máximo
-    dt_max
-
-    # Delta Força Máxima
-    df_max
-
-    dados_envio = {
-        "t_pista": t_pista,
-        "t_teste1": t_teste1,
-        "t_teste2": t_teste2,
-        "t_teste3": t_teste3,
-        "dt_max": dt_max,
-        "f_teste_pista": f_pista,
-        "f_teste1": f_teste1,
-        "f_teste2": f_teste2,
-        "f_teste3": f_teste3,
-        "df_max": df_max
-    }
-
-    return dados_envio
-
 
 #Operations
 
 def Operation_Coast_Down():
+    global time_Operation_Coast_Down
     key = "Operations/Operation_Coast_Down"
     
     tag_list=[
@@ -287,10 +77,10 @@ def Operation_Coast_Down():
         "Dados.amostraselecionada.massa"
     ]
     while 1:
+        start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_Coast_Down.btn")
             if t==True:
-                print("Rodando Coast Down")
                 e3.write_tag(["Dados.apis.Operation_Coast_Down.btn","False"])
                 dados_recebidos=e3.read_tag(tag_list)                
                 for r in range(0,len(dados_recebidos)):
@@ -302,7 +92,7 @@ def Operation_Coast_Down():
                     "coefLossCurve": [float(str(dados_recebidos[3]).replace(",",".")),float(str(dados_recebidos[4]).replace(",",".")),float(str(dados_recebidos[5]).replace(",","."))]
                 }
                 r=c.post(key,dados_enviar)
-                print("Resultado {}".format(r))
+                print("Resultado: {}".format(r))
                 #r=json.loads(r)
                 #e3.write_tag([
                 #    ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
@@ -312,8 +102,11 @@ def Operation_Coast_Down():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Operation_Coast_Down = time.time() - start_time
+        
 
 def Operation_Coast_Down_R2():
+    global time_Operation_Coast_Down_R2
     key = "Operations/Operation_Coast_Down_R02"
     
     tag_list=[
@@ -326,6 +119,7 @@ def Operation_Coast_Down_R2():
         "Dados.amostraselecionada.massa"
     ]
     while 1:
+        start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_Coast_Down.btn")
             if t==True:
@@ -341,179 +135,17 @@ def Operation_Coast_Down_R2():
                 }
                 r=c.post(key,dados_enviar)
                 r=json.loads(r)
-                r1=coastd(dados_enviar["massaAmostra"],dados_enviar["coefPistaRolamento"][0],dados_enviar["coefPistaRolamento"][1],dados_enviar["coefPistaRolamento"][2],r)
-                #print("e3:{}".format(r1))
                 e3.write_tag([
-                        ["Dados.amostraselecionada.cAcalculado",round(r["PolCoefsReportArray_Force"][0][0],4)],
-                        ["Dados.amostraselecionada.cBcalculado",round(r["PolCoefsReportArray_Force"][0][1],4)],
-                        ["Dados.amostraselecionada.cCcalculado",round(r["PolCoefsReportArray_Force"][0][2],4)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista1",round(r1["f_teste_pista"][14],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista2",round(r1["f_teste_pista"][13],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista3",round(r1["f_teste_pista"][12],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista4",round(r1["f_teste_pista"][11],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista5",round(r1["f_teste_pista"][10],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista6",round(r1["f_teste_pista"][9],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista7",round(r1["f_teste_pista"][8],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista8",round(r1["f_teste_pista"][7],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista9",round(r1["f_teste_pista"][6],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista10",round(r1["f_teste_pista"][5],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista11",round(r1["f_teste_pista"][4],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista12",round(r1["f_teste_pista"][3],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista13",round(r1["f_teste_pista"][2],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista14",round(r1["f_teste_pista"][1],3)],
-                        ["Dados.Relatorios.CoastDown.pista.fpista15",round(r1["f_teste_pista"][0],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista1",round(r1["t_pista"][14],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista2",round(r1["t_pista"][13],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista3",round(r1["t_pista"][12],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista4",round(r1["t_pista"][11],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista5",round(r1["t_pista"][10],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista6",round(r1["t_pista"][9],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista7",round(r1["t_pista"][8],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista8",round(r1["t_pista"][7],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista9",round(r1["t_pista"][6],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista10",round(r1["t_pista"][5],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista11",round(r1["t_pista"][4],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista12",round(r1["t_pista"][3],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista13",round(r1["t_pista"][2],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista14",round(r1["t_pista"][1],3)],
-                        ["Dados.Relatorios.CoastDown.pista.tpista15",round(r1["t_pista"][0],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.c0",round(r["PolCoefsReportArray_Force"][3][0],4)],
-                        ["Dados.Relatorios.CoastDown.teste3.c1",round(r["PolCoefsReportArray_Force"][3][1],4)],
-                        ["Dados.Relatorios.CoastDown.teste3.c2",round(r["PolCoefsReportArray_Force"][3][2],4)],
-                        ["Dados.Relatorios.CoastDown.teste3.t1",round(r1["t_teste3"][14],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t2",round(r1["t_teste3"][13],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t3",round(r1["t_teste3"][12],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t4",round(r1["t_teste3"][11],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t5",round(r1["t_teste3"][10],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t6",round(r1["t_teste3"][9],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t7",round(r1["t_teste3"][8],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t8",round(r1["t_teste3"][7],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t9",round(r1["t_teste3"][6],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t10",round(r1["t_teste3"][5],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t11",round(r1["t_teste3"][4],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t12",round(r1["t_teste3"][3],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t13",round(r1["t_teste3"][2],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t14",round(r1["t_teste3"][1],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.t15",round(r1["t_teste3"][0],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f1",round(r1["f_teste3"][14],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f2",round(r1["f_teste3"][13],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f3",round(r1["f_teste3"][12],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f4",round(r1["f_teste3"][11],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f5",round(r1["f_teste3"][10],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f6",round(r1["f_teste3"][9],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f7",round(r1["f_teste3"][8],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f8",round(r1["f_teste3"][7],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f9",round(r1["f_teste3"][6],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f10",round(r1["f_teste3"][5],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f11",round(r1["f_teste3"][4],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f12",round(r1["f_teste3"][3],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f13",round(r1["f_teste3"][2],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f14",round(r1["f_teste3"][1],3)],
-                        ["Dados.Relatorios.CoastDown.teste3.f15",round(r1["f_teste3"][0],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.c0",round(r["PolCoefsReportArray_Force"][2][0],4)],
-                        ["Dados.Relatorios.CoastDown.teste2.c1",round(r["PolCoefsReportArray_Force"][2][1],4)],
-                        ["Dados.Relatorios.CoastDown.teste2.c2",round(r["PolCoefsReportArray_Force"][2][2],4)],
-                        ["Dados.Relatorios.CoastDown.teste2.t1",round(r1["t_teste2"][14],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t2",round(r1["t_teste2"][13],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t3",round(r1["t_teste2"][12],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t4",round(r1["t_teste2"][11],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t5",round(r1["t_teste2"][10],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t6",round(r1["t_teste2"][9],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t7",round(r1["t_teste2"][8],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t8",round(r1["t_teste2"][7],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t9",round(r1["t_teste2"][6],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t10",round(r1["t_teste2"][5],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t11",round(r1["t_teste2"][4],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t12",round(r1["t_teste2"][3],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t13",round(r1["t_teste2"][2],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t14",round(r1["t_teste2"][1],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.t15",round(r1["t_teste2"][0],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f1",round(r1["f_teste2"][14],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f2",round(r1["f_teste2"][13],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f3",round(r1["f_teste2"][12],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f4",round(r1["f_teste2"][11],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f5",round(r1["f_teste2"][10],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f6",round(r1["f_teste2"][9],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f7",round(r1["f_teste2"][8],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f8",round(r1["f_teste2"][7],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f9",round(r1["f_teste2"][6],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f10",round(r1["f_teste2"][5],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f11",round(r1["f_teste2"][4],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f12",round(r1["f_teste2"][3],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f13",round(r1["f_teste2"][2],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f14",round(r1["f_teste2"][1],3)],
-                        ["Dados.Relatorios.CoastDown.teste2.f15",round(r1["f_teste2"][0],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.c0",round(r["PolCoefsReportArray_Force"][1][0],4)],
-                        ["Dados.Relatorios.CoastDown.teste1.c1",round(r["PolCoefsReportArray_Force"][1][1],4)],
-                        ["Dados.Relatorios.CoastDown.teste1.c2",round(r["PolCoefsReportArray_Force"][1][2],4)],
-                        ["Dados.Relatorios.CoastDown.teste1.t1",round(r1["t_teste1"][14],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t2",round(r1["t_teste1"][13],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t3",round(r1["t_teste1"][12],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t4",round(r1["t_teste1"][11],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t5",round(r1["t_teste1"][10],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t6",round(r1["t_teste1"][9],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t7",round(r1["t_teste1"][8],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t8",round(r1["t_teste1"][7],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t9",round(r1["t_teste1"][6],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t10",round(r1["t_teste1"][5],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t11",round(r1["t_teste1"][4],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t12",round(r1["t_teste1"][3],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t13",round(r1["t_teste1"][2],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t14",round(r1["t_teste1"][1],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.t15",round(r1["t_teste1"][0],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f1",round(r1["f_teste1"][14],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f2",round(r1["f_teste1"][13],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f3",round(r1["f_teste1"][12],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f4",round(r1["f_teste1"][11],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f5",round(r1["f_teste1"][10],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f6",round(r1["f_teste1"][9],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f7",round(r1["f_teste1"][8],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f8",round(r1["f_teste1"][7],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f9",round(r1["f_teste1"][6],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f10",round(r1["f_teste1"][5],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f11",round(r1["f_teste1"][4],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f12",round(r1["f_teste1"][3],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f13",round(r1["f_teste1"][2],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f14",round(r1["f_teste1"][1],3)],
-                        ["Dados.Relatorios.CoastDown.teste1.f15",round(r1["f_teste1"][0],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t1",round(r1["dt_max"][14],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t2",round(r1["dt_max"][13],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t3",round(r1["dt_max"][12],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t4",round(r1["dt_max"][11],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t5",round(r1["dt_max"][10],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t6",round(r1["dt_max"][9],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t7",round(r1["dt_max"][8],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t8",round(r1["dt_max"][7],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t9",round(r1["dt_max"][6],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t10",round(r1["dt_max"][5],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t11",round(r1["dt_max"][4],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t12",round(r1["dt_max"][3],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t13",round(r1["dt_max"][2],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t14",round(r1["dt_max"][1],3)],
-                        ["Dados.Relatorios.CoastDown.delta.t15",round(r1["dt_max"][0],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f1",round(r1["df_max"][14],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f2",round(r1["df_max"][13],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f3",round(r1["df_max"][12],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f4",round(r1["df_max"][11],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f5",round(r1["df_max"][10],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f6",round(r1["df_max"][9],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f7",round(r1["df_max"][8],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f8",round(r1["df_max"][7],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f9",round(r1["df_max"][6],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f10",round(r1["df_max"][5],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f11",round(r1["df_max"][4],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f12",round(r1["df_max"][3],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f13",round(r1["df_max"][2],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f14",round(r1["df_max"][1],3)],
-                        ["Dados.Relatorios.CoastDown.delta.f15",round(r1["df_max"][0],3)]
-                    ]
+                    ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
+                    ["Dados.amostraselecionada.cBcalculado",r["coefPistaDina_Calc"][1]],
+                    ["Dados.amostraselecionada.cCcalculado",r["coefPistaDina_Calc"][2]]]
                 )
         except Exception as e:
             print(e)
-        time.sleep(0.5)    
+        time.sleep(0.5)
+        time_Operation_Coast_Down_R2 = time.time() - start_time    
 
 def Operation_Curve_Loss_Dynamic():
-
     key = "Operations/Operation_Curve_Loss_Dynamic"
     while 1:
         try:
@@ -523,11 +155,13 @@ def Operation_Curve_Loss_Dynamic():
                 resultado=c.get(key)
         except:
             pass
-        time.sleep(0.5)    
+        time.sleep(0.5)   
 
 def Operation_Curve_Loss_Static():
+    global time_Operation_Curve_Loss_Static
     key = "Operations/Operation_Curve_Loss_Static"
     while 1:
+        start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.btn")
             if t==True:
@@ -556,12 +190,14 @@ def Operation_Curve_Loss_Static():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Operation_Curve_Loss_Static = time.time() - start_time 
 
 #?
 def Operation_Dina_Verification():
     pass
 
 def Operation_FreeTest():
+    global time_Operation_FreeTest
     key = "Operations/Operation_FreeTest"
     tag_list=[
         "Dados.apis.FreeTest.coefCoastDown.t1",
@@ -572,6 +208,7 @@ def Operation_FreeTest():
         "Dados.apis.FreeTest.coefLossCurve.t3"
     ]
     while 1:
+        start_time = time.time()
         t=e3.read_tag("Dados.apis.FreeTest.iniciar")
         if t == True:            
             e3.write_tag(["Dados.apis.FreeTest.iniciar","False"])
@@ -584,8 +221,10 @@ def Operation_FreeTest():
                 "coefLossCurve": [float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5])]
             }
             c.post(key, dados_envia)
+            time_Operation_FreeTest = time.time() - start_time 
 
 def Operation_LoadCellCalibration():
+    global time_Operation_LoadCellCalibration
     key="Operations/Operation_LoadCellCalibration"
     tag_list=[
         "Dados.apis.Operation_LoadCellCalibration.P1_P10.h1",
@@ -612,6 +251,7 @@ def Operation_LoadCellCalibration():
         "Dados.apis.Operation_LoadCellCalibration.P11_P20.t10"
     ]
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.btn")==True:
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.btn",False])
@@ -694,9 +334,11 @@ def Operation_LoadCellCalibration():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Operation_LoadCellCalibration = time.time() - start_time 
 
 #?
 def Operation_RoadTest():
+    global time_Operation_RoadTest
     key="Operations/Operation_RoadTests"
     tag_list=[
         "Dados.amostraselecionada.cAcalculado",
@@ -708,6 +350,7 @@ def Operation_RoadTest():
         "Dados.apis.Operation_Curve_Loss_Static.f2"
     ]
     while 1:
+        start_time = time.time()
         t=e3.read_tag("Dados.apis.RoadTest.btn")
         if t == True:
             e3.write_tag(["Dados.apis.RoadTest.btn","False"])
@@ -727,8 +370,10 @@ def Operation_RoadTest():
             }
             c.post(key, dados_envia)
     time.sleep(0.5)
+    time_Operation_RoadTest = time.time() - start_time
 
 def Operation_Durab_Teste():
+    global time_Operation_Durab_Teste
     key="Operations/Operation_RoadTests"
     tag_list=[
         "Dados.amostraselecionada.cAcalculado",
@@ -752,6 +397,7 @@ def Operation_Durab_Teste():
         "Dados.apis.Operation_Durab_Teste.Distancias.Dist6"
     ]
     while 1:
+        start_time = time.time()
         t=e3.read_tag("Dados.apis.Operation_Durab_Teste.btn")
         if t == True:
             e3.write_tag(["Dados.apis.Operation_Durab_Teste.btn","False"])
@@ -774,10 +420,13 @@ def Operation_Durab_Teste():
             }
             c.post(key, dados_envia)
     time.sleep(0.5)
+    time_Operation_Durab_Teste = time.time() - start_time
 
 def Operation_SamplePositioning():
+    global time_Operation_SamplePositioning
     key = "Operations/Operation_SamplePositioning"
     while 1:
+        start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_SamplePositioning.btn")
             if t==True:
@@ -786,9 +435,11 @@ def Operation_SamplePositioning():
         except:
             pass
         time.sleep(0.5)
+        time_Operation_SamplePositioning = time.time() - start_time
 
 
 def Operation_Warmup():
+    global time_Operation_Warmup
     key = "Operations/Operation_Warmup"
     tag_list=[
         "Dados.apis.Operation_Warmup.warmupVelocity.t1",
@@ -803,29 +454,29 @@ def Operation_Warmup():
         "Dados.apis.Operation_Warmup.warmupTime.t5"
     ]
     while 1:
+        start_time = time.time()
         try:  
             if e3.read_tag("Dados.apis.Operation_Warmup.btn")==True:
                 e3.write_tag(["Dados.apis.Operation_Warmup.btn",False])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
-                    "warmupVelocity": [int(dados_recebidos[0]),int(dados_recebidos[1]),int(dados_recebidos[2]),int(dados_recebidos[3]),int(dados_recebidos[4]),0],
-                    "warmupTime": [int(dados_recebidos[5]),int(dados_recebidos[6]),int(dados_recebidos[7]),int(dados_recebidos[8]),int(dados_recebidos[9]),5]
+                    "warmupVelocity": [int(dados_recebidos[0]),int(dados_recebidos[1]),int(dados_recebidos[2]),int(dados_recebidos[3]),int(dados_recebidos[4])],
+                    "warmupTime": [int(dados_recebidos[5]),int(dados_recebidos[6]),int(dados_recebidos[7]),int(dados_recebidos[8]),int(dados_recebidos[9])]
                 }
-                print("s1")
                 c.post(key,dados_enviar)
-                print("s2")
         except Exception as e:
             print(e)
         time.sleep(0.5)
-
-
+        time_Operation_Warmup = time.time() - start_time
 
 
 #Server Interface
 
 
 def Interface_Curve_Loss_Static():
+    global time_Interface_Curve_Loss_Static
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.stop")==True:
                 e3.write_tag(["Dados.apis.Operation_Curve_Loss_Static.stop","False"])
@@ -840,9 +491,11 @@ def Interface_Curve_Loss_Static():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Interface_Curve_Loss_Static = time.time() - start_time
 
 
 def Interface_FreeTest():
+    global time_Interface_FreeTest
     key =  "Operations_Servers_Interface/Interface_FreeTest"
     tag_list = [
         "Dados.apis.FreeTest.coefCoastDown.t1",
@@ -863,6 +516,7 @@ def Interface_FreeTest():
         "Dados.apis.FreeTest.FreeTestType"
     ]
     while 1:
+        start_time = time.time()
         try:
             b=e3.read_tag("Dados.apis.FreeTest.atualiza")
             if b == True:
@@ -907,8 +561,10 @@ def Interface_FreeTest():
         except Exception as e:
             print(e)
         time.sleep(0.5)
+        time_Interface_FreeTest = time.time() - start_time
 
 def Interface_Input_LoadCell_Arrays():
+    global time_Interface_Input_LoadCell_Arrays
     key="Operations_Servers_Interface/Interface_Input_LoadCell_Arrays"
     tag_list=[
         "Dados.apis.Operation_LoadCellCalibration.Data_loadCell_Calibrated.t1",
@@ -976,6 +632,7 @@ def Interface_Input_LoadCell_Arrays():
         "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t21"
     ]   
     while 1:
+        start_time = time.time()
         try:
             global send_calibration
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.envia_calibracao") or send_calibration==True:
@@ -990,10 +647,13 @@ def Interface_Input_LoadCell_Arrays():
                 c.post(key,dados_enviar)
         except:
             pass
+        time_Interface_Input_LoadCell_Arrays = time.time() - start_time
 
 def Interface_LoadCellCalibration():
+    global time_Interface_LoadCellCalibration
     key="Operations_Servers_Interface/Interface_LoadCellCalibration"
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.atualiza"):
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.atualiza","False"])
@@ -1026,6 +686,7 @@ def Interface_LoadCellCalibration():
         except:
             pass
         time.sleep(0.5)
+        time_Interface_LoadCellCalibration = time.time() - start_time
 
 
 def Interface_Output_test():
@@ -1053,8 +714,10 @@ def Interface_Read_Datalog():
 
 #?
 def Interface_RoadTests():
+    global time_Interface_RoadTests
     key="Operations_Servers_Interface/Interface_RoadTests"
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_Durab_Teste.start")==True:
                 e3.write_tag(["Dados.apis.Operation_Durab_Teste.start","False"])
@@ -1099,14 +762,16 @@ def Interface_RoadTests():
         except:
             pass
         time.sleep(0.5)
-
+        time_Interface_RoadTests = time.time() - start_time
 #?
 def Interface_RoadTests_Driver():
     pass
 
 #?
 def Interface_SamplePositioning():
+    global time_Interface_SamplePositioning
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_SamplePositioning.stop"):
                 e3.write_tag(["Dados.apis.Operation_SamplePositioning.stop","False"])
@@ -1114,6 +779,7 @@ def Interface_SamplePositioning():
         except:
             pass
         time.sleep(0.5)
+        time_Interface_SamplePositioning = time.time() - start_time
 
 
 def Interface_RoadTests_Driver():
@@ -1124,8 +790,10 @@ def Interface_RoadTests_Driver():
 
 
 def Interface_Open_Alcapao_PL():
+    global time_Interface_Open_Alcapao_PL
     key = "Operations_Servers_Interface/Interface_Open_Alcapao_PL"
     while 1:
+        start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.atualiza")==True:
                 e3.write_tag(["Dados.apis.Operation_Open_Alcapao_PL.atualiza","False"])
@@ -1143,11 +811,14 @@ def Interface_Open_Alcapao_PL():
         except:
             pass
         time.sleep(0.5)
+        time_Interface_Open_Alcapao_PL = time.time() - start_time
     
 
 
 async def wsocket():
+    global time_web_socket
     while 1:
+        start_time = time.time()
         try:
             async with websockets.connect('ws://169.254.62.198:6123') as websocket:
                 time.sleep(5)
@@ -1155,6 +826,7 @@ async def wsocket():
                 while 1:
                     await websocket.send("{}".format(i))
                     response = await websocket.recv()
+                    print(response)
                     try:
                         data=json.loads(response)
                         r=[]
@@ -1172,10 +844,152 @@ async def wsocket():
                     except Exception as e:
                         print("Falha:{}{}".format(e,d[0]))
                     time.sleep(0.1)
-        except Exception as e:
-            print(e)
+        except:
+            pass
         time.sleep(10)
+        time_web_socket = time.time() - start_time
 
+def screen_diagnostics():
+
+    trigger = 30
+    size = (940, 300)
+
+    frame_layout_1 = [
+                        [sg.Text("Status Operação: Checagem", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Checagem", background_color="#344E61")],
+                        [sg.Text("Status Operação: Warm Up", background_color="#344E61")],
+                        [sg.Text("Status Operação: Curva de Perda", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Curva de Perda", background_color="#344E61")],
+                        [sg.Text("Status Operação: Posicionamento da Amostra", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Posicionamento da Amostra", background_color="#344E61")],
+                        [sg.Text("Status Operação: Coast Down", background_color="#344E61")],
+                        [sg.Text("Status Operação: Teste Livre", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Teste Livre", background_color="#344E61")],
+                        [sg.Text("Status Operação: Teste de Durabilidade", background_color="#344E61")],
+                        [sg.Text("Status Operação: Teste de Pista", background_color="#344E61")],
+                        [sg.Text("Status Operação: Interface Teste de Pista", background_color="#344E61")]
+                        ]
+
+    frame_layout_2 = [
+                        [sg.Text("Tempo de Execução:", key = "-TIME_OPERATION_CHECAGEM-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_CHECAGEM-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_OPERATION_WARMUP-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_OPERATION_CURVA_PERDA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_CURVA_PERDA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_POSICIONAMENTO_DA_AMOSTRA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_POSICIONAMENTO_AMOSTRA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_COAST_DOWN-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "TIME_TESTE_LIVRE-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_TESTE_LIVRE-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "TIME_DURABILIDADE", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_PISTA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_PISTA-", background_color="#344E61")]
+                    ]
+    
+    frame_layout_3 = [
+        [sg.Text("Good", key = "-STATUS_OPERATION_CHECAGEM-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_CHECAGEM-")],
+        [sg.Text("Good", key = "-STATUS_OPERATION_WARMUP-")],
+        [sg.Text("Good", key = "-STATUS_OPERATION_CURVA_PERDA-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_CURVA_PERDA-")],
+        [sg.Text("Good", key = "-STATUS_POSICIONAMENTO_DA_AMOSTRA-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-")],
+        [sg.Text("Good", key = "-STATUS_COAST_DOWN-")],
+        [sg.Text("Good", key = "-STATUS_TESTE_LIVRE-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_TESTE_LIVRE-")],
+        [sg.Text("Good", key = "-STATUS_DURABILIDADE-")],
+        [sg.Text("Good", key = "-STATUS_PISTA-")],
+        [sg.Text("Good", key = "-STATUS_INTERFACE_PISTA-")]
+    ]
+
+    layout = [
+        [sg.Frame("Canal de Comunicação", frame_layout_1, font="Helvetica 12", title_color="white", background_color="#344E61",
+                  expand_x=True, expand_y=True),
+        sg.Frame("Tempo de Execução (segundos)", frame_layout_2, font="Helvetica 12", title_color="white", background_color="#344E61",
+                  expand_x=True, expand_y=True),
+        sg.Frame("Status do Canal", frame_layout_3, font="Helvetica 12", title_color="white", background_color="#344E61",
+                  expand_x=True, expand_y=True)]
+        
+    ]
+
+    window = sg.Window('Diagnóistico da Comunicação Labview', layout, size=size,
+                        background_color="#344E61", enable_close_attempted_event=False)
+    
+    while True:
+        event, values = window.read(timeout=10)
+
+        if event == sg.WIN_CLOSED :
+            break
+
+        window["-TIME_OPERATION_CHECAGEM-"].update(f"Tempo de Execução: {round(time_Operation_LoadCellCalibration,5)}")
+        window["-TIME_INTERFACE_CHECAGEM-"].update(f"Tempo de Execução: {round(time_Interface_LoadCellCalibration, 5)}")
+        window["-TIME_OPERATION_WARMUP-"].update(f"Tempo de Execução: {round(time_Operation_Warmup, 5)}")
+        window["-TIME_OPERATION_CURVA_PERDA-"].update(f"Tempo de Execução: {round(time_Operation_Curve_Loss_Static, 5)}")
+        window["-TIME_INTERFACE_CURVA_PERDA-"].update(f"Tempo de Execução: {round(time_Operation_Curve_Loss_Static, 5)}")
+        window["-TIME_POSICIONAMENTO_DA_AMOSTRA-"].update(f"Tempo de Execução: {round(time_Operation_SamplePositioning, 5)}")
+        window["-TIME_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update(f"Tempo de Execução: {round(time_Interface_SamplePositioning, 5)}")
+        window["-TIME_COAST_DOWN-"].update(f"Tempo de Execução: {round(time_Operation_Coast_Down, 5)}")
+        window["TIME_TESTE_LIVRE-"].update(f"Tempo de Execução: {round(time_Operation_FreeTest, 5)}")
+        window["-TIME_INTERFACE_TESTE_LIVRE-"].update(f"Tempo de Execução: {round(time_Interface_FreeTest, 5)}")
+        window["TIME_DURABILIDADE"].update(f"Tempo de Execução: {round(time_Operation_Durab_Teste, 5)}")
+        window["-TIME_PISTA-"].update(f"Tempo de Execução: {round(time_Operation_RoadTest, 5)}")
+        window["-TIME_INTERFACE_PISTA-"].update(f"Tempo de Execução: {round(time_Operation_RoadTest, 5)}")
+
+
+        if time_Operation_LoadCellCalibration > trigger:
+            window["-STATUS_OPERATION_CHECAGEM-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_OPERATION_CHECAGEM-"].update(background_color="green")
+        if time_Interface_LoadCellCalibration > trigger:
+            window["-STATUS_INTERFACE_CHECAGEM-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_CHECAGEM-"].update(background_color="green")
+        if time_Operation_Warmup > trigger:
+            window["-STATUS_OPERATION_WARMUP-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_OPERATION_WARMUP-"].update(background_color="green")
+        if time_Operation_Curve_Loss_Static > trigger:
+            window["-STATUS_OPERATION_CURVA_PERDA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_OPERATION_CURVA_PERDA-"].update(background_color="green")
+        if time_Interface_Curve_Loss_Static > trigger:
+            window["-STATUS_INTERFACE_CURVA_PERDA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_CURVA_PERDA-"].update(background_color="green")
+        if time_Operation_SamplePositioning > trigger:
+            window["-STATUS_POSICIONAMENTO_DA_AMOSTRA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_POSICIONAMENTO_DA_AMOSTRA-"].update(background_color="green")
+        if time_Interface_SamplePositioning > trigger:
+            window["-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update(background_color="green")
+        if time_Operation_Coast_Down > trigger:
+            window["-STATUS_COAST_DOWN-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_COAST_DOWN-"].update(background_color="green")
+        if time_Operation_FreeTest > trigger:
+            window["-STATUS_TESTE_LIVRE-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_TESTE_LIVRE-"].update(background_color="green")
+        if time_Interface_FreeTest > trigger:
+            window["-STATUS_INTERFACE_TESTE_LIVRE-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_TESTE_LIVRE-"].update(background_color="green")
+        if time_Operation_Durab_Teste > trigger:
+            window["-STATUS_DURABILIDADE-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_DURABILIDADE-"].update(background_color="green")
+        if time_Operation_RoadTest > trigger:
+            window["-STATUS_PISTA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_PISTA-"].update(background_color="green")
+        if time_Interface_RoadTests > trigger:
+            window["-STATUS_INTERFACE_PISTA-"].update("Bad", background_color="red")
+        else:
+            window["-STATUS_INTERFACE_PISTA-"].update(background_color="green")
+        
+        
 
 
 e3=elipse()
@@ -1198,6 +1012,7 @@ t.append(Thread(target=Operation_RoadTest))
 t.append(Thread(target=Operation_Curve_Loss_Static))
 t.append(Thread(target=Interface_Curve_Loss_Static))
 t.append(Thread(target=Operation_Durab_Teste))
+t.append(Thread(target=screen_diagnostics))
 
 
 for th in t:
@@ -1208,7 +1023,7 @@ for th in t:
 async def echo(websocket):
     async for message in websocket:
         try:
-            await websocket.send("{\"Forca_Calibrada\":"+str(r_data[1][1])+",\"Velocidade_kmh\":"+str(r_data[0][1])+",\"start\":"+str((int(r_data[11][1])&4)==4).lower()+",\"stop\":"+str((int(r_data[11][1])&8)==8).lower()+",\"end\":"+str((int(r_data[11][1])&2)==2).lower()+"}")
+            await websocket.send("{\"Velocidade_kmh\":"+str(r_data[0][1])+",\"start\":"+str((int(r_data[11][1])&4)==4).lower()+",\"stop\":"+str((int(r_data[11][1])&8)==8).lower()+",\"end\":"+str((int(r_data[11][1])&2)==2).lower()+"}")
             mess=json.loads(message)
             try:
                 e3.write_tag(["Dados.apis.websocket.acertos",mess["acertos"]])
@@ -1254,5 +1069,6 @@ loop.run_forever()
 #        asyncio.get_event_loop().run_until_complete(wsocket())
 #    except:
 #        pass
-for th in t:
-    th.join()
+
+#for th in t:
+    #th.join()

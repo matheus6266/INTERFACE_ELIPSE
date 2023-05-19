@@ -41,12 +41,12 @@ class elipse:
             return s
         return self.E3.WriteValue(data[0],timestamp,192,data[1])
 
-if __name__=="__main__":
-    e3=elipse()
-    x=0
-    while 1:
-        resultado_escrita=e3.write_tag([["Dados.t2",x],["Dados.t3",x+1],["Dados.t4",x+2]])
-        print("Resultado das escritas {}".format(resultado_escrita))
-        x=x+1
-        print("Leitura das tags:{}".format(e3.read_tag(["Dados.t2","Dados.t3","Dados.t4"])))
-        time.sleep(1)
+#if __name__=="__main__":
+#    e3=elipse()
+#    x=0
+#    while 1:
+#        resultado_escrita=e3.write_tag([["Dados.apis.heartbeat",1]])
+#        print("Resultado das escritas {}".format(resultado_escrita))
+#        x=x+1
+#        print("Leitura das tags:{}".format(e3.read_tag(["Dados.apis.heartbeat"])))
+#        time.sleep(1)
