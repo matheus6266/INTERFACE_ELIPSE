@@ -48,6 +48,25 @@ time_Interface_Curve_Loss_Static = 0
 time_Operation_Durab_Teste = 0
 time_web_socket = 0
 
+status_screen_diagnostics = 0
+status_Operation_Warmup = 0
+status_Interface_RoadTests = 0
+status_Operation_SamplePositioning = 0
+status_Interface_SamplePositioning = 0
+status_Interface_FreeTest = 0
+status_Operation_FreeTest = 0
+status_Operation_LoadCellCalibration = 0
+status_Interface_Input_LoadCell_Arrays = 0
+status_Interface_LoadCellCalibration = 0
+status_Interface_Open_Alcapao_PL = 0
+status_Operation_Coast_Down = 0
+status_Operation_Coast_Down_R2 = 0
+status_Operation_RoadTest = 0
+status_Operation_Curve_Loss_Static = 0
+status_Interface_Curve_Loss_Static = 0
+status_Operation_Durab_Teste = 0
+status_web_socket = 0
+
 class crio:
     def __init__(self,url):
             self.url=url
@@ -60,7 +79,6 @@ class crio:
         result=requests.get(url=self.url+endpoint)
         return json.loads(result.text)
         
-
 def coastd(massa_veiculo,coef_pista_a,coef_pista_b,coef_pista_c,data):
     velocidade_padrao = np.array(list(range(25, 101, 5)))
 
@@ -134,7 +152,6 @@ def coastd(massa_veiculo,coef_pista_a,coef_pista_b,coef_pista_c,data):
 
     return dados_envio
 
-
 #Operations
 
 def Operation_Coast_Down():
@@ -151,7 +168,6 @@ def Operation_Coast_Down():
         "Dados.amostraselecionada.massa"
     ]
     while 1:
-        start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_Coast_Down.btn")
             if t==True:
@@ -166,7 +182,6 @@ def Operation_Coast_Down():
                     "coefLossCurve": [float(str(dados_recebidos[3]).replace(",",".")),float(str(dados_recebidos[4]).replace(",",".")),float(str(dados_recebidos[5]).replace(",","."))]
                 }
                 r=c.post(key,dados_enviar)
-                print("Resultado: {}".format(r))
                 r=json.loads(r)
                 e3.write_tag([
                     ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
@@ -174,13 +189,11 @@ def Operation_Coast_Down():
                     ["Dados.amostraselecionada.cCcalculado",r["coefPistaDina_Calc"][2]]]
                 )
         except Exception as e:
-            print(e)
+            pass
         time.sleep(0.5)
-        time_Operation_Coast_Down = time.time() - start_time
         
-
 def Operation_Coast_Down_R2():
-    global time_Operation_Coast_Down_R2
+    global time_Operation_Coast_Down_R2, status_Operation_Coast_Down_R2
     key = "Operations/Operation_Coast_Down_R02"
     
     tag_list=[
@@ -197,6 +210,7 @@ def Operation_Coast_Down_R2():
         try:
             t=e3.read_tag("Dados.apis.Operation_Coast_Down.btn")
             if t==True:
+                status_Operation_Coast_Down_R2 = 1
                 e3.write_tag(["Dados.apis.Operation_Coast_Down.btn","False"])
                 dados_recebidos=e3.read_tag(tag_list)                
                 for r in range(0,len(dados_recebidos)):
@@ -210,7 +224,6 @@ def Operation_Coast_Down_R2():
                 r=c.post(key,dados_enviar)
                 r=json.loads(r)
                 r1=coastd(dados_enviar["massaAmostra"],dados_enviar["coefPistaRolamento"][0],dados_enviar["coefPistaRolamento"][1],dados_enviar["coefPistaRolamento"][2],r)
-                #print("e3:{}".format(r1))
                 e3.write_tag([
                         ["Dados.amostraselecionada.cAcalculado",round(r["PolCoefsReportArray_Force"][0][0],4)],
                         ["Dados.amostraselecionada.cBcalculado",round(r["PolCoefsReportArray_Force"][0][1],4)],
@@ -377,9 +390,10 @@ def Operation_Coast_Down_R2():
                     ]
                 )
         except Exception as e:
-            print(e)
+            pass
         time.sleep(0.5)
-        time_Operation_Coast_Down_R2 = time.time() - start_time    
+        status_Operation_Coast_Down_R2 = 0
+        time_Operation_Coast_Down_R2 = time.time() - start_time 
 
 def Operation_Curve_Loss_Dynamic():
     key = "Operations/Operation_Curve_Loss_Dynamic"
@@ -394,13 +408,14 @@ def Operation_Curve_Loss_Dynamic():
         time.sleep(0.5)   
 
 def Operation_Curve_Loss_Static():
-    global time_Operation_Curve_Loss_Static
+    global time_Operation_Curve_Loss_Static, status_Operation_Curve_Loss_Static
     key = "Operations/Operation_Curve_Loss_Static"
     while 1:
         start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.btn")
             if t==True:
+                status_Operation_Curve_Loss_Static = 1
                 e3.write_tag([["Dados.apis.Operation_Curve_Loss_Static.btn","False"],["Dados.apis.Operation_Curve_Loss_Static.f0","0"],["Dados.apis.Operation_Curve_Loss_Static.f1","0"],["Dados.apis.Operation_Curve_Loss_Static.f2","0"]])
                 r=json.loads(str(c.get(key)).replace("'","\""))
                 #r=json.loads(str("{'Array_Force_mean': [2.131791696848824, -36.75591981634028, -43.05322457675331, -47.09736131761025, -50.66178686313542, -53.94787085430391, -56.51531263216908, -60.27087413576736, -62.13168844806643, -64.83289104546871, -67.60879266438118, -71.54806258712011, -73.49645260316589, 0], 'Polynomial Coefficients': [-31.7576920234575, -0.4464380439978495, 0.0009325935555171616]}").replace("'","\""))
@@ -424,16 +439,16 @@ def Operation_Curve_Loss_Static():
                     ]
                 e3.write_tag(dados)
         except Exception as e:
-            print(e)
+            pass
         time.sleep(0.5)
         time_Operation_Curve_Loss_Static = time.time() - start_time 
+        status_Operation_Curve_Loss_Static = 0
 
-#?
 def Operation_Dina_Verification():
     pass
 
 def Operation_FreeTest():
-    global time_Operation_FreeTest
+    global time_Operation_FreeTest, status_Operation_FreeTest
     key = "Operations/Operation_FreeTest"
     tag_list=[
         "Dados.apis.FreeTest.coefCoastDown.t1",
@@ -445,22 +460,28 @@ def Operation_FreeTest():
     ]
     while 1:
         start_time = time.time()
-        t=e3.read_tag("Dados.apis.FreeTest.iniciar")
-        if t == True:            
-            e3.write_tag(["Dados.apis.FreeTest.iniciar","False"])
-            dados_recebidos=e3.read_tag(tag_list)
-            for i in range(0,len(dados_recebidos)):
-                if dados_recebidos[i]==None:
-                    dados_recebidos[i]=0
-            dados_envia= {
-                "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
-                "coefLossCurve": [float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5])]
-            }
-            c.post(key, dados_envia)
-            time_Operation_FreeTest = time.time() - start_time 
+        try:
+            t=e3.read_tag("Dados.apis.FreeTest.iniciar")
+            if t == True:
+                status_Operation_FreeTest = 1            
+                e3.write_tag(["Dados.apis.FreeTest.iniciar","False"])
+                dados_recebidos=e3.read_tag(tag_list)
+                for i in range(0,len(dados_recebidos)):
+                    if dados_recebidos[i]==None:
+                        dados_recebidos[i]=0
+                dados_envia= {
+                    "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
+                    "coefLossCurve": [float(dados_recebidos[3]),float(dados_recebidos[4]),float(dados_recebidos[5])]
+                }
+                c.post(key, dados_envia)
+        except Exception as e:
+            pass
+        time.sleep(0.5)
+        time_Operation_FreeTest = time.time() - start_time
+        status_Operation_FreeTest = 0
 
 def Operation_LoadCellCalibration():
-    global time_Operation_LoadCellCalibration
+    global time_Operation_LoadCellCalibration, status_Operation_LoadCellCalibration
     key="Operations/Operation_LoadCellCalibration"
     tag_list=[
         "Dados.apis.Operation_LoadCellCalibration.P1_P10.h1",
@@ -490,6 +511,7 @@ def Operation_LoadCellCalibration():
         start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.btn")==True:
+                status_Operation_LoadCellCalibration = 1
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.btn",False])
                 dados_recebidos=e3.read_tag(tag_list)
                 for i in range(0,len(dados_recebidos)):
@@ -568,13 +590,13 @@ def Operation_LoadCellCalibration():
                 ]
                 e3.write_tag(dados)
         except Exception as e:
-            print(e)
+            pass
         time.sleep(0.5)
-        time_Operation_LoadCellCalibration = time.time() - start_time 
+        status_Operation_LoadCellCalibration = 0
+        time_Operation_LoadCellCalibration = time.time() - start_time
 
-#?
 def Operation_RoadTest():
-    global time_Operation_RoadTest
+    global time_Operation_RoadTest, status_Operation_RoadTest
     key="Operations/Operation_RoadTests"
     tag_list=[
         "Dados.amostraselecionada.cAcalculado",
@@ -587,29 +609,34 @@ def Operation_RoadTest():
     ]
     while 1:
         start_time = time.time()
-        t=e3.read_tag("Dados.apis.RoadTest.btn")
-        if t == True:
-            e3.write_tag(["Dados.apis.RoadTest.btn","False"])
+        try:
+            t=e3.read_tag("Dados.apis.RoadTest.btn")
+            if t == True:
+                status_Operation_RoadTest = 1
+                e3.write_tag(["Dados.apis.RoadTest.btn","False"])
 
-            dados_recebidos=e3.read_tag(tag_list)
-            for i in range(0,len(dados_recebidos)):
-                if dados_recebidos[i]==None:
-                    dados_recebidos[i]=0
-            dados_envia= {
-                "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
-                "massaAmostra": float(dados_recebidos[3]),
-                "coefLossCurve": [float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6])],
-                "DurabDist": [0.0,0.0],
-                "DurabVel": [1,1],
-                "TypeTest": True,
-                "RoadVelArray": [0 for a in range(0,60*60*24)]
-            }
-            c.post(key, dados_envia)
-    time.sleep(0.5)
-    time_Operation_RoadTest = time.time() - start_time
+                dados_recebidos=e3.read_tag(tag_list)
+                for i in range(0,len(dados_recebidos)):
+                    if dados_recebidos[i]==None:
+                        dados_recebidos[i]=0
+                dados_envia= {
+                    "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
+                    "massaAmostra": float(dados_recebidos[3]),
+                    "coefLossCurve": [float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6])],
+                    "DurabDist": [0.0,0.0],
+                    "DurabVel": [1,1],
+                    "TypeTest": True,
+                    "RoadVelArray": [0 for a in range(0,60*60*24)]
+                }
+                c.post(key, dados_envia)
+        except Exception as e:
+            pass
+        time.sleep(0.5)
+        status_Operation_RoadTest = 0
+        time_Operation_RoadTest = time.time() - start_time
 
 def Operation_Durab_Teste():
-    global time_Operation_Durab_Teste
+    global time_Operation_Durab_Teste, status_Operation_Durab_Teste
     key="Operations/Operation_RoadTests"
     tag_list=[
         "Dados.amostraselecionada.cAcalculado",
@@ -634,48 +661,54 @@ def Operation_Durab_Teste():
     ]
     while 1:
         start_time = time.time()
-        t=e3.read_tag("Dados.apis.Operation_Durab_Teste.btn")
-        if t == True:
-            e3.write_tag(["Dados.apis.Operation_Durab_Teste.btn","False"])
+        try:
+            t=e3.read_tag("Dados.apis.Operation_Durab_Teste.btn")
+            if t == True:
+                status_Operation_Durab_Teste = 1
+                e3.write_tag(["Dados.apis.Operation_Durab_Teste.btn","False"])
 
-            dados_recebidos=e3.read_tag(tag_list)
-            for i in range(0,len(dados_recebidos)):
-                if dados_recebidos[i]==None:
-                    dados_recebidos[i]=0
-            dados_envia= {
-                "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
-                "massaAmostra": float(dados_recebidos[3]),
-                "coefLossCurve": [float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6])],
-                "DurabDist": [float(dados_recebidos[13]),float(dados_recebidos[14]),float(dados_recebidos[15]),
-                             float(dados_recebidos[16]),float(dados_recebidos[17]),float(dados_recebidos[18])],
-                "DurabVel": [float(dados_recebidos[7]),float(dados_recebidos[8]),float(dados_recebidos[9]),
-                             float(dados_recebidos[10]),float(dados_recebidos[11]),float(dados_recebidos[12])],
-                "TypeTest": False,
-                "RoadVelArray": [0 for a in range(0,60*60*24)],
+                dados_recebidos=e3.read_tag(tag_list)
+                for i in range(0,len(dados_recebidos)):
+                    if dados_recebidos[i]==None:
+                        dados_recebidos[i]=0
+                dados_envia= {
+                    "coefDinaCoastDown": [float(dados_recebidos[0]),float(dados_recebidos[1]),float(dados_recebidos[2])],
+                    "massaAmostra": float(dados_recebidos[3]),
+                    "coefLossCurve": [float(dados_recebidos[4]),float(dados_recebidos[5]),float(dados_recebidos[6])],
+                    "DurabDist": [float(dados_recebidos[13]),float(dados_recebidos[14]),float(dados_recebidos[15]),
+                                float(dados_recebidos[16]),float(dados_recebidos[17]),float(dados_recebidos[18])],
+                    "DurabVel": [float(dados_recebidos[7]),float(dados_recebidos[8]),float(dados_recebidos[9]),
+                                float(dados_recebidos[10]),float(dados_recebidos[11]),float(dados_recebidos[12])],
+                    "TypeTest": False,
+                    "RoadVelArray": [0 for a in range(0,60*60*24)],
 
-            }
-            c.post(key, dados_envia)
-    time.sleep(0.5)
-    time_Operation_Durab_Teste = time.time() - start_time
+                }
+                c.post(key, dados_envia)
+        except Exception as e:
+            pass
+        time.sleep(0.5)
+        status_Operation_Durab_Teste = 0
+        time_Operation_Durab_Teste = time.time() - start_time
 
 def Operation_SamplePositioning():
-    global time_Operation_SamplePositioning
+    global time_Operation_SamplePositioning, status_Operation_SamplePositioning
     key = "Operations/Operation_SamplePositioning"
     while 1:
         start_time = time.time()
         try:
             t=e3.read_tag("Dados.apis.Operation_SamplePositioning.btn")
             if t==True:
+                status_Operation_SamplePositioning = 1
                 e3.write_tag(["Dados.apis.Operation_SamplePositioning.btn","False"])
                 resultado=c.get(key)
         except:
             pass
         time.sleep(0.5)
+        status_Operation_SamplePositioning = 0
         time_Operation_SamplePositioning = time.time() - start_time
 
-
 def Operation_Warmup():
-    global time_Operation_Warmup
+    global time_Operation_Warmup, status_Operation_Warmup
     key = "Operations/Operation_Warmup"
     tag_list=[
         "Dados.apis.Operation_Warmup.warmupVelocity.t1",
@@ -693,6 +726,7 @@ def Operation_Warmup():
         start_time = time.time()
         try:  
             if e3.read_tag("Dados.apis.Operation_Warmup.btn")==True:
+                status_Operation_Warmup = 1
                 e3.write_tag(["Dados.apis.Operation_Warmup.btn",False])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
@@ -701,20 +735,20 @@ def Operation_Warmup():
                 }
                 c.post(key,dados_enviar)
         except Exception as e:
-            print(e)
+            pass
         time.sleep(0.5)
+        status_Operation_Warmup = 0
         time_Operation_Warmup = time.time() - start_time
-
 
 #Server Interface
 
-
 def Interface_Curve_Loss_Static():
-    global time_Interface_Curve_Loss_Static
+    global time_Interface_Curve_Loss_Static, status_Interface_Curve_Loss_Static
     while 1:
         start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_Curve_Loss_Static.stop")==True:
+                status_Interface_Curve_Loss_Static = 1
                 e3.write_tag(["Dados.apis.Operation_Curve_Loss_Static.stop","False"])
                 c.get("Operations_Servers_Interface/Interface_Curve_Loss_Static?User_Stop=1")
                 time.sleep(0.5)
@@ -725,13 +759,13 @@ def Interface_Curve_Loss_Static():
                 time.sleep(4)
                 c.get("Operations_Servers_Interface/Interface_Reset_Supervisorio?Reset_Supervisorio=0")
         except Exception as e:
-            print(e)
+            pass
         time.sleep(0.5)
+        status_Interface_Curve_Loss_Static = 0
         time_Interface_Curve_Loss_Static = time.time() - start_time
 
-
 def Interface_FreeTest():
-    global time_Interface_FreeTest
+    global time_Interface_FreeTest, status_Interface_FreeTest
     key =  "Operations_Servers_Interface/Interface_FreeTest"
     tag_list = [
         "Dados.apis.FreeTest.coefCoastDown.t1",
@@ -756,6 +790,7 @@ def Interface_FreeTest():
         try:
             b=e3.read_tag("Dados.apis.FreeTest.atualiza")
             if b == True:
+                status_Interface_FreeTest = 1
                 #e3.write_tag([["Dados.apis.FreeTest.atualiza","False"],["Dados.apis.FreeTest.StopTest","False"],["Dados.apis.FreeTest.ZeraDistancia","False"]])
                 t=e3.read_tag(tag_list)
                 for i in range(0,len(t)):
@@ -795,12 +830,13 @@ def Interface_FreeTest():
                     }
                     c.post(key, post_ope_interface_free_teste)
         except Exception as e:
-            print(e)
+            pass
         time.sleep(0.5)
+        status_Interface_FreeTest = 0
         time_Interface_FreeTest = time.time() - start_time
 
 def Interface_Input_LoadCell_Arrays():
-    global time_Interface_Input_LoadCell_Arrays
+    global time_Interface_Input_LoadCell_Arrays, status_Interface_Input_LoadCell_Arrays
     key="Operations_Servers_Interface/Interface_Input_LoadCell_Arrays"
     tag_list=[
         "Dados.apis.Operation_LoadCellCalibration.Data_loadCell_Calibrated.t1",
@@ -868,10 +904,11 @@ def Interface_Input_LoadCell_Arrays():
         "Dados.apis.Operation_LoadCellCalibration.Data_LoadCell_Uncertainties.t21"
     ]   
     while 1:
-        start_time = time.time()
+        star_time = time.time()
         try:
             global send_calibration
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.envia_calibracao") or send_calibration==True:
+                status_Interface_Input_LoadCell_Arrays = 1
                 send_calibration=False
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.envia_calibracao",False])
                 dados_recebidos=e3.read_tag(tag_list)
@@ -883,15 +920,17 @@ def Interface_Input_LoadCell_Arrays():
                 c.post(key,dados_enviar)
         except:
             pass
-        time_Interface_Input_LoadCell_Arrays = time.time() - start_time
+        time_Interface_Input_LoadCell_Arrays = time.time() - star_time
+        status_Interface_Input_LoadCell_Arrays = 0
 
 def Interface_LoadCellCalibration():
-    global time_Interface_LoadCellCalibration
+    global time_Interface_LoadCellCalibration, status_Interface_LoadCellCalibration
     key="Operations_Servers_Interface/Interface_LoadCellCalibration"
     while 1:
         start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.atualiza"):
+                status_Interface_LoadCellCalibration = 1
                 e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.atualiza","False"])
                 if e3.read_tag("Dados.apis.Operation_LoadCellCalibration.ok")==True:
                     e3.write_tag(["Dados.apis.Operation_LoadCellCalibration.ok","False"])
@@ -923,7 +962,7 @@ def Interface_LoadCellCalibration():
             pass
         time.sleep(0.5)
         time_Interface_LoadCellCalibration = time.time() - start_time
-
+        status_Interface_LoadCellCalibration = 0
 
 def Interface_Output_test():
     tag_list=[
@@ -943,19 +982,18 @@ def Interface_Output_test():
         except:
             pass
         time.sleep(0.5)
-
-#?        
+     
 def Interface_Read_Datalog():
     pass
 
-#?
 def Interface_RoadTests():
-    global time_Interface_RoadTests
+    global time_Interface_RoadTests, status_Interface_RoadTests
     key="Operations_Servers_Interface/Interface_RoadTests"
     while 1:
         start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_Durab_Teste.start")==True:
+                status_Interface_RoadTests = 1
                 e3.write_tag(["Dados.apis.Operation_Durab_Teste.start","False"])
                 post_ope_interface_free_teste = {
                     "TestStart": True,
@@ -998,40 +1036,40 @@ def Interface_RoadTests():
         except:
             pass
         time.sleep(0.5)
+        status_Interface_RoadTests = 0
         time_Interface_RoadTests = time.time() - start_time
-#?
+
 def Interface_RoadTests_Driver():
     pass
 
-#?
 def Interface_SamplePositioning():
-    global time_Interface_SamplePositioning
+    global time_Interface_SamplePositioning, status_Interface_SamplePositioning
     while 1:
         start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_SamplePositioning.stop"):
+                status_Interface_SamplePositioning = 1
                 e3.write_tag(["Dados.apis.Operation_SamplePositioning.stop","False"])
                 c.get("Operations_Servers_Interface/Interface_SamplePositioning?Stop_Supervisorio={}".format("True"))
         except:
             pass
         time.sleep(0.5)
         time_Interface_SamplePositioning = time.time() - start_time
-
+        status_Interface_SamplePositioning = 0
 
 def Interface_RoadTests_Driver():
     {'Distancia_percorrida': 0, 'Velocidade_Target_RoadTests': 0, 'Velocidade_Encoder_km_h': 0}
     key = "Operations_Servers_Interface/Interface_RoadTests_Driver"
     resultado=c.get(key)
 
-
-
 def Interface_Open_Alcapao_PL():
-    global time_Interface_Open_Alcapao_PL
+    global time_Interface_Open_Alcapao_PL, status_Interface_Open_Alcapao_PL
     key = "Operations_Servers_Interface/Interface_Open_Alcapao_PL"
     while 1:
         start_time = time.time()
         try:
             if e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.atualiza")==True:
+                status_Interface_Open_Alcapao_PL = 1
                 e3.write_tag(["Dados.apis.Operation_Open_Alcapao_PL.atualiza","False"])
                 al=e3.read_tag("Dados.apis.Operation_Open_Alcapao_PL.alcapao")
                 if al!=True:
@@ -1047,22 +1085,20 @@ def Interface_Open_Alcapao_PL():
         except:
             pass
         time.sleep(0.5)
+        status_Interface_Open_Alcapao_PL = 0
         time_Interface_Open_Alcapao_PL = time.time() - start_time
     
-
-
 async def wsocket():
     global time_web_socket
     while 1:
-        start_time = time.time()
         try:
             async with websockets.connect('ws://169.254.62.198:6123') as websocket:
                 time.sleep(5)
                 i=0
                 while 1:
+                    start_time = time.time()
                     await websocket.send("{}".format(i))
                     response = await websocket.recv()
-                    print(response)
                     try:
                         data=json.loads(response)
                         r=[]
@@ -1078,32 +1114,32 @@ async def wsocket():
                             e3.write_tag(r)
                         e3.write_tag(["Dados.apis.heartbeat",1],True)
                     except Exception as e:
-                        print("Falha:{}{}".format(e,d[0]))
+                        pass
                     time.sleep(0.1)
+                    time_web_socket = time.time() - start_time
         except Exception as e:
             pass
         time.sleep(10)
-        time_web_socket = time.time() - start_time
-
+        
 def screen_diagnostics():
 
-    trigger = 30
-    size = (940, 300)
+    size = (940, 400)
 
     frame_layout_1 = [
-                        [sg.Text("Status Operação: Checagem", background_color="#344E61")],
-                        [sg.Text("Status Operação: Interface Checagem", background_color="#344E61")],
-                        [sg.Text("Status Operação: Warm Up", background_color="#344E61")],
-                        [sg.Text("Status Operação: Curva de Perda", background_color="#344E61")],
-                        [sg.Text("Status Operação: Interface Curva de Perda", background_color="#344E61")],
-                        [sg.Text("Status Operação: Posicionamento da Amostra", background_color="#344E61")],
-                        [sg.Text("Status Operação: Interface Posicionamento da Amostra", background_color="#344E61")],
-                        [sg.Text("Status Operação: Coast Down", background_color="#344E61")],
-                        [sg.Text("Status Operação: Teste Livre", background_color="#344E61")],
-                        [sg.Text("Status Operação: Interface Teste Livre", background_color="#344E61")],
-                        [sg.Text("Status Operação: Teste de Durabilidade", background_color="#344E61")],
-                        [sg.Text("Status Operação: Teste de Pista", background_color="#344E61")],
-                        [sg.Text("Status Operação: Interface Teste de Pista", background_color="#344E61")]
+                        [sg.Text("Operação: Checagem", background_color="#344E61")],
+                        [sg.Text("Operação: Interface Checagem", background_color="#344E61")],
+                        [sg.Text("Operação: Warm Up", background_color="#344E61")],
+                        [sg.Text("Operação: Curva de Perda", background_color="#344E61")],
+                        [sg.Text("Operação: Interface Curva de Perda", background_color="#344E61")],
+                        [sg.Text("Operação: Posicionamento da Amostra", background_color="#344E61")],
+                        [sg.Text("Operação: Interface Posicionamento da Amostra", background_color="#344E61")],
+                        [sg.Text("Operação: Coast Down", background_color="#344E61")],
+                        [sg.Text("Operação: Teste Livre", background_color="#344E61")],
+                        [sg.Text("Operação: Interface Teste Livre", background_color="#344E61")],
+                        [sg.Text("Operação: Teste de Durabilidade", background_color="#344E61")],
+                        [sg.Text("Operação: Teste de Pista", background_color="#344E61")],
+                        [sg.Text("Operação: Interface Teste de Pista", background_color="#344E61")],
+                        [sg.Text("Operação: Comunicação Web Socket", background_color="#344E61")]
                         ]
 
     frame_layout_2 = [
@@ -1119,7 +1155,8 @@ def screen_diagnostics():
                          [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_TESTE_LIVRE-", background_color="#344E61")],
                          [sg.Text("Tempo de Execução:", key = "TIME_DURABILIDADE", background_color="#344E61")],
                          [sg.Text("Tempo de Execução:", key = "-TIME_PISTA-", background_color="#344E61")],
-                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_PISTA-", background_color="#344E61")]
+                         [sg.Text("Tempo de Execução:", key = "-TIME_INTERFACE_PISTA-", background_color="#344E61")],
+                         [sg.Text("Tempo de Execução:", key = "-TIME_WEB_SOCKET-", background_color="#344E61")]
                     ]
     
     frame_layout_3 = [
@@ -1135,7 +1172,8 @@ def screen_diagnostics():
         [sg.Text("Good", key = "-STATUS_INTERFACE_TESTE_LIVRE-")],
         [sg.Text("Good", key = "-STATUS_DURABILIDADE-")],
         [sg.Text("Good", key = "-STATUS_PISTA-")],
-        [sg.Text("Good", key = "-STATUS_INTERFACE_PISTA-")]
+        [sg.Text("Good", key = "-STATUS_INTERFACE_PISTA-")],
+    [sg.Text("Good", key = "-STATUS_WEB_SOCKET-", background_color="green")]
     ]
 
     layout = [
@@ -1143,12 +1181,12 @@ def screen_diagnostics():
                   expand_x=True, expand_y=True),
         sg.Frame("Tempo de Execução (segundos)", frame_layout_2, font="Helvetica 12", title_color="white", background_color="#344E61",
                   expand_x=True, expand_y=True),
-        sg.Frame("Status do Canal", frame_layout_3, font="Helvetica 12", title_color="white", background_color="#344E61",
+        sg.Frame("Status do Canal de Comunicação", frame_layout_3, font="Helvetica 12", title_color="white", background_color="#344E61",
                   expand_x=True, expand_y=True)]
         
     ]
 
-    window = sg.Window('Diagnóistico da Comunicação Labview', layout, size=size,
+    window = sg.Window('Diagnóstico da Comunicação Labview e Elipse E3', layout, size=size,
                         background_color="#344E61", enable_close_attempted_event=False)
     
     while True:
@@ -1161,73 +1199,70 @@ def screen_diagnostics():
         window["-TIME_INTERFACE_CHECAGEM-"].update(f"Tempo de Execução: {round(time_Interface_LoadCellCalibration, 5)}")
         window["-TIME_OPERATION_WARMUP-"].update(f"Tempo de Execução: {round(time_Operation_Warmup, 5)}")
         window["-TIME_OPERATION_CURVA_PERDA-"].update(f"Tempo de Execução: {round(time_Operation_Curve_Loss_Static, 5)}")
-        window["-TIME_INTERFACE_CURVA_PERDA-"].update(f"Tempo de Execução: {round(time_Operation_Curve_Loss_Static, 5)}")
+        window["-TIME_INTERFACE_CURVA_PERDA-"].update(f"Tempo de Execução: {round(time_Interface_Curve_Loss_Static, 5)}")
         window["-TIME_POSICIONAMENTO_DA_AMOSTRA-"].update(f"Tempo de Execução: {round(time_Operation_SamplePositioning, 5)}")
         window["-TIME_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update(f"Tempo de Execução: {round(time_Interface_SamplePositioning, 5)}")
-        window["-TIME_COAST_DOWN-"].update(f"Tempo de Execução: {round(time_Operation_Coast_Down, 5)}")
+        window["-TIME_COAST_DOWN-"].update(f"Tempo de Execução: {round(time_Operation_Coast_Down_R2, 5)}")
         window["TIME_TESTE_LIVRE-"].update(f"Tempo de Execução: {round(time_Operation_FreeTest, 5)}")
         window["-TIME_INTERFACE_TESTE_LIVRE-"].update(f"Tempo de Execução: {round(time_Interface_FreeTest, 5)}")
         window["TIME_DURABILIDADE"].update(f"Tempo de Execução: {round(time_Operation_Durab_Teste, 5)}")
         window["-TIME_PISTA-"].update(f"Tempo de Execução: {round(time_Operation_RoadTest, 5)}")
-        window["-TIME_INTERFACE_PISTA-"].update(f"Tempo de Execução: {round(time_Operation_RoadTest, 5)}")
-
-
-        if time_Operation_LoadCellCalibration > trigger:
-            window["-STATUS_OPERATION_CHECAGEM-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_OPERATION_CHECAGEM-"].update(background_color="green")
-        if time_Interface_LoadCellCalibration > trigger:
-            window["-STATUS_INTERFACE_CHECAGEM-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_INTERFACE_CHECAGEM-"].update(background_color="green")
-        if time_Operation_Warmup > trigger:
-            window["-STATUS_OPERATION_WARMUP-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_OPERATION_WARMUP-"].update(background_color="green")
-        if time_Operation_Curve_Loss_Static > trigger:
-            window["-STATUS_OPERATION_CURVA_PERDA-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_OPERATION_CURVA_PERDA-"].update(background_color="green")
-        if time_Interface_Curve_Loss_Static > trigger:
-            window["-STATUS_INTERFACE_CURVA_PERDA-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_INTERFACE_CURVA_PERDA-"].update(background_color="green")
-        if time_Operation_SamplePositioning > trigger:
-            window["-STATUS_POSICIONAMENTO_DA_AMOSTRA-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_POSICIONAMENTO_DA_AMOSTRA-"].update(background_color="green")
-        if time_Interface_SamplePositioning > trigger:
-            window["-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update(background_color="green")
-        if time_Operation_Coast_Down > trigger:
-            window["-STATUS_COAST_DOWN-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_COAST_DOWN-"].update(background_color="green")
-        if time_Operation_FreeTest > trigger:
-            window["-STATUS_TESTE_LIVRE-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_TESTE_LIVRE-"].update(background_color="green")
-        if time_Interface_FreeTest > trigger:
-            window["-STATUS_INTERFACE_TESTE_LIVRE-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_INTERFACE_TESTE_LIVRE-"].update(background_color="green")
-        if time_Operation_Durab_Teste > trigger:
-            window["-STATUS_DURABILIDADE-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_DURABILIDADE-"].update(background_color="green")
-        if time_Operation_RoadTest > trigger:
-            window["-STATUS_PISTA-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_PISTA-"].update(background_color="green")
-        if time_Interface_RoadTests > trigger:
-            window["-STATUS_INTERFACE_PISTA-"].update("Bad", background_color="red")
-        else:
-            window["-STATUS_INTERFACE_PISTA-"].update(background_color="green")
+        window["-TIME_INTERFACE_PISTA-"].update(f"Tempo de Execução: {round(time_Interface_RoadTests, 5)}")
+        window["-TIME_WEB_SOCKET-"].update(f"Tempo de Execução: {round(time_web_socket, 5)}")
         
+        if status_Operation_LoadCellCalibration == 1:
+            window["-STATUS_OPERATION_CHECAGEM-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_OPERATION_CHECAGEM-"].update("Good", background_color="green", text_color = "white")
+        if status_Interface_LoadCellCalibration == 1:
+            window["-STATUS_INTERFACE_CHECAGEM-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_INTERFACE_CHECAGEM-"].update("Good", background_color="green", text_color = "white")
+        if status_Operation_Warmup == 1:
+            window["-STATUS_OPERATION_WARMUP-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_OPERATION_WARMUP-"].update("Good", background_color="green", text_color = "white")
+        if status_Operation_Curve_Loss_Static == 1:
+            window["-STATUS_OPERATION_CURVA_PERDA-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_OPERATION_CURVA_PERDA-"].update("Good", background_color="green", text_color = "white")
+        if status_Interface_Curve_Loss_Static == 1:
+            window["-STATUS_INTERFACE_CURVA_PERDA-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_INTERFACE_CURVA_PERDA-"].update("Good", background_color="green", text_color = "white")
+        if status_Operation_SamplePositioning == 1:
+            window["-STATUS_POSICIONAMENTO_DA_AMOSTRA-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_POSICIONAMENTO_DA_AMOSTRA-"].update("Good", background_color="green", text_color = "white")
+        if status_Interface_SamplePositioning == 1:
+            window["-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_INTERFACE_POSICIONAMENTO_AMOSTRA-"].update("Good", background_color="green", text_color = "white")
+        if status_Operation_Coast_Down_R2 == 1:
+            window["-STATUS_COAST_DOWN-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_COAST_DOWN-"].update("Good", background_color="green", text_color = "white")
+        if status_Operation_FreeTest == 1:
+            window["-STATUS_TESTE_LIVRE-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_TESTE_LIVRE-"].update("Good", background_color="green", text_color = "white")
+        if status_Interface_FreeTest == 1:
+            window["-STATUS_INTERFACE_TESTE_LIVRE-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_INTERFACE_TESTE_LIVRE-"].update("Good", background_color="green", text_color = "white")
+        if status_Operation_Durab_Teste == 1:
+            window["-STATUS_DURABILIDADE-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_DURABILIDADE-"].update("Good",background_color="green", text_color = "white")
+        if status_Operation_RoadTest == 1:
+            window["-STATUS_PISTA-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_PISTA-"].update("Good", background_color="green", text_color = "white")
+        if status_Interface_RoadTests == 1:
+            window["-STATUS_INTERFACE_PISTA-"].update("Running", background_color="yellow", text_color = "black")
+        else:
+            window["-STATUS_INTERFACE_PISTA-"].update("Good", background_color="green", text_color = "white")
         
-
-
 e3=elipse()
 c=crio("http://169.254.62.198:8001/DinaCON_WebService/")
 
@@ -1250,11 +1285,8 @@ t.append(Thread(target=Interface_Curve_Loss_Static))
 t.append(Thread(target=Operation_Durab_Teste))
 t.append(Thread(target=screen_diagnostics))
 
-
 for th in t:
     th.start()
-
-
 
 async def echo(websocket):
     async for message in websocket:
@@ -1287,12 +1319,11 @@ async def echo(websocket):
             except:
                 pass
         except Exception as e:
-            print(e)
+            pass
 
 async def ma():
     async with websockets.serve(echo, "169.254.62.180", 8765):
         await asyncio.Future()  # run forever
-
 
 ma=asyncio.ensure_future(ma())
 ws=asyncio.ensure_future(wsocket())
