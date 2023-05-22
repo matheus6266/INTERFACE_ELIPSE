@@ -8,6 +8,7 @@ import websockets
 import PySimpleGUI as sg
 import time
 import win32timezone
+import numpy as np
 
 requests.packages.urllib3.disable_warnings()
 
@@ -60,6 +61,79 @@ class crio:
         return json.loads(result.text)
         
 
+def coastd(massa_veiculo,coef_pista_a,coef_pista_b,coef_pista_c,data):
+    velocidade_padrao = np.array(list(range(25, 101, 5)))
+
+    # Agora, 'data' é uma variável que contém o conteúdo do arquivo json. Você pode trabalhar com ela como faria com um dicionário normal em Python.
+    coef_1_a = data["PolCoefsReportArray_Force"][1][0]
+    coef_1_b = data["PolCoefsReportArray_Force"][1][1]
+    coef_1_c = data["PolCoefsReportArray_Force"][1][2]
+    coef_2_a = data["PolCoefsReportArray_Force"][2][0]
+    coef_2_b = data["PolCoefsReportArray_Force"][2][1]
+    coef_2_c = data["PolCoefsReportArray_Force"][2][2]
+    coef_3_a = data["PolCoefsReportArray_Force"][3][0]
+    coef_3_b = data["PolCoefsReportArray_Force"][3][1]
+    coef_3_c = data["PolCoefsReportArray_Force"][3][2]
+
+    dt_max = data["MaxDif_Time_Pista"]
+    df_max = data["MaxDif_Force_Pista"]
+
+    # Cálculo Pista
+    forca_pista = (coef_pista_c*(velocidade_padrao*velocidade_padrao) + coef_pista_b*velocidade_padrao + coef_pista_a)
+    tempo_pista = (1.015*massa_veiculo)*((5/3.6)/forca_pista)
+
+    # Cálculo Ensaio 1
+    forca_1 = (coef_1_c*(velocidade_padrao*velocidade_padrao) + coef_1_b*velocidade_padrao + coef_1_a)
+    tempo_1 = (1.015*massa_veiculo)*((5/3.6)/forca_1)
+
+    # Cálculo Ensaio 2
+    forca_2 = (coef_2_c*(velocidade_padrao*velocidade_padrao) + coef_2_b*velocidade_padrao + coef_2_a)
+    tempo_2 = (1.015*massa_veiculo)*((5/3.6)/forca_2)
+
+    # Cálculo Ensaio 3
+    forca_3 = (coef_3_c*(velocidade_padrao*velocidade_padrao) + coef_3_b*velocidade_padrao + coef_3_a)
+    tempo_3 = (1.015*massa_veiculo)*((5/3.6)/forca_3)
+
+
+    ################### ENVIAR ##########################
+
+    # Teste de Pista
+    f_pista = list(reversed(forca_pista))
+    t_pista = list(reversed(tempo_pista))
+
+    # Ensaio 1
+    f_teste1 = list(reversed(forca_1))
+    t_teste1 = list(reversed(tempo_1))
+
+    # Ensaio 2
+    f_teste2 = list(reversed(forca_2))
+    t_teste2 = list(reversed(tempo_2))
+
+    # Ensaio 3
+    f_teste3 = list(reversed(forca_3))
+    t_teste3 = list(reversed(tempo_3))
+
+    # Delta Tempo Máximo
+    dt_max
+
+    # Delta Força Máxima
+    df_max
+
+    dados_envio = {
+        "t_pista": t_pista,
+        "t_teste1": t_teste1,
+        "t_teste2": t_teste2,
+        "t_teste3": t_teste3,
+        "dt_max": dt_max,
+        "f_teste_pista": f_pista,
+        "f_teste1": f_teste1,
+        "f_teste2": f_teste2,
+        "f_teste3": f_teste3,
+        "df_max": df_max
+    }
+
+    return dados_envio
+
 
 #Operations
 
@@ -93,12 +167,12 @@ def Operation_Coast_Down():
                 }
                 r=c.post(key,dados_enviar)
                 print("Resultado: {}".format(r))
-                #r=json.loads(r)
-                #e3.write_tag([
-                #    ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
-                #    ["Dados.amostraselecionada.cBcalculado",r["coefPistaDina_Calc"][1]],
-                #    ["Dados.amostraselecionada.cCcalculado",r["coefPistaDina_Calc"][2]]]
-                #)
+                r=json.loads(r)
+                e3.write_tag([
+                    ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
+                    ["Dados.amostraselecionada.cBcalculado",r["coefPistaDina_Calc"][1]],
+                    ["Dados.amostraselecionada.cCcalculado",r["coefPistaDina_Calc"][2]]]
+                )
         except Exception as e:
             print(e)
         time.sleep(0.5)
@@ -135,10 +209,172 @@ def Operation_Coast_Down_R2():
                 }
                 r=c.post(key,dados_enviar)
                 r=json.loads(r)
+                r1=coastd(dados_enviar["massaAmostra"],dados_enviar["coefPistaRolamento"][0],dados_enviar["coefPistaRolamento"][1],dados_enviar["coefPistaRolamento"][2],r)
+                #print("e3:{}".format(r1))
                 e3.write_tag([
-                    ["Dados.amostraselecionada.cAcalculado",r["coefPistaDina_Calc"][0]],
-                    ["Dados.amostraselecionada.cBcalculado",r["coefPistaDina_Calc"][1]],
-                    ["Dados.amostraselecionada.cCcalculado",r["coefPistaDina_Calc"][2]]]
+                        ["Dados.amostraselecionada.cAcalculado",round(r["PolCoefsReportArray_Force"][0][0],4)],
+                        ["Dados.amostraselecionada.cBcalculado",round(r["PolCoefsReportArray_Force"][0][1],4)],
+                        ["Dados.amostraselecionada.cCcalculado",round(r["PolCoefsReportArray_Force"][0][2],4)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista1",round(r1["f_teste_pista"][14],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista2",round(r1["f_teste_pista"][13],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista3",round(r1["f_teste_pista"][12],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista4",round(r1["f_teste_pista"][11],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista5",round(r1["f_teste_pista"][10],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista6",round(r1["f_teste_pista"][9],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista7",round(r1["f_teste_pista"][8],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista8",round(r1["f_teste_pista"][7],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista9",round(r1["f_teste_pista"][6],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista10",round(r1["f_teste_pista"][5],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista11",round(r1["f_teste_pista"][4],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista12",round(r1["f_teste_pista"][3],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista13",round(r1["f_teste_pista"][2],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista14",round(r1["f_teste_pista"][1],3)],
+                        ["Dados.Relatorios.CoastDown.pista.fpista15",round(r1["f_teste_pista"][0],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista1",round(r1["t_pista"][14],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista2",round(r1["t_pista"][13],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista3",round(r1["t_pista"][12],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista4",round(r1["t_pista"][11],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista5",round(r1["t_pista"][10],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista6",round(r1["t_pista"][9],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista7",round(r1["t_pista"][8],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista8",round(r1["t_pista"][7],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista9",round(r1["t_pista"][6],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista10",round(r1["t_pista"][5],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista11",round(r1["t_pista"][4],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista12",round(r1["t_pista"][3],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista13",round(r1["t_pista"][2],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista14",round(r1["t_pista"][1],3)],
+                        ["Dados.Relatorios.CoastDown.pista.tpista15",round(r1["t_pista"][0],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.c0",round(r["PolCoefsReportArray_Force"][3][0],4)],
+                        ["Dados.Relatorios.CoastDown.teste3.c1",round(r["PolCoefsReportArray_Force"][3][1],4)],
+                        ["Dados.Relatorios.CoastDown.teste3.c2",round(r["PolCoefsReportArray_Force"][3][2],4)],
+                        ["Dados.Relatorios.CoastDown.teste3.t1",round(r1["t_teste3"][14],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t2",round(r1["t_teste3"][13],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t3",round(r1["t_teste3"][12],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t4",round(r1["t_teste3"][11],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t5",round(r1["t_teste3"][10],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t6",round(r1["t_teste3"][9],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t7",round(r1["t_teste3"][8],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t8",round(r1["t_teste3"][7],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t9",round(r1["t_teste3"][6],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t10",round(r1["t_teste3"][5],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t11",round(r1["t_teste3"][4],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t12",round(r1["t_teste3"][3],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t13",round(r1["t_teste3"][2],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t14",round(r1["t_teste3"][1],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.t15",round(r1["t_teste3"][0],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f1",round(r1["f_teste3"][14],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f2",round(r1["f_teste3"][13],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f3",round(r1["f_teste3"][12],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f4",round(r1["f_teste3"][11],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f5",round(r1["f_teste3"][10],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f6",round(r1["f_teste3"][9],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f7",round(r1["f_teste3"][8],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f8",round(r1["f_teste3"][7],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f9",round(r1["f_teste3"][6],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f10",round(r1["f_teste3"][5],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f11",round(r1["f_teste3"][4],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f12",round(r1["f_teste3"][3],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f13",round(r1["f_teste3"][2],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f14",round(r1["f_teste3"][1],3)],
+                        ["Dados.Relatorios.CoastDown.teste3.f15",round(r1["f_teste3"][0],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.c0",round(r["PolCoefsReportArray_Force"][2][0],4)],
+                        ["Dados.Relatorios.CoastDown.teste2.c1",round(r["PolCoefsReportArray_Force"][2][1],4)],
+                        ["Dados.Relatorios.CoastDown.teste2.c2",round(r["PolCoefsReportArray_Force"][2][2],4)],
+                        ["Dados.Relatorios.CoastDown.teste2.t1",round(r1["t_teste2"][14],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t2",round(r1["t_teste2"][13],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t3",round(r1["t_teste2"][12],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t4",round(r1["t_teste2"][11],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t5",round(r1["t_teste2"][10],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t6",round(r1["t_teste2"][9],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t7",round(r1["t_teste2"][8],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t8",round(r1["t_teste2"][7],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t9",round(r1["t_teste2"][6],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t10",round(r1["t_teste2"][5],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t11",round(r1["t_teste2"][4],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t12",round(r1["t_teste2"][3],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t13",round(r1["t_teste2"][2],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t14",round(r1["t_teste2"][1],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.t15",round(r1["t_teste2"][0],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f1",round(r1["f_teste2"][14],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f2",round(r1["f_teste2"][13],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f3",round(r1["f_teste2"][12],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f4",round(r1["f_teste2"][11],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f5",round(r1["f_teste2"][10],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f6",round(r1["f_teste2"][9],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f7",round(r1["f_teste2"][8],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f8",round(r1["f_teste2"][7],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f9",round(r1["f_teste2"][6],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f10",round(r1["f_teste2"][5],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f11",round(r1["f_teste2"][4],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f12",round(r1["f_teste2"][3],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f13",round(r1["f_teste2"][2],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f14",round(r1["f_teste2"][1],3)],
+                        ["Dados.Relatorios.CoastDown.teste2.f15",round(r1["f_teste2"][0],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.c0",round(r["PolCoefsReportArray_Force"][1][0],4)],
+                        ["Dados.Relatorios.CoastDown.teste1.c1",round(r["PolCoefsReportArray_Force"][1][1],4)],
+                        ["Dados.Relatorios.CoastDown.teste1.c2",round(r["PolCoefsReportArray_Force"][1][2],4)],
+                        ["Dados.Relatorios.CoastDown.teste1.t1",round(r1["t_teste1"][14],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t2",round(r1["t_teste1"][13],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t3",round(r1["t_teste1"][12],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t4",round(r1["t_teste1"][11],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t5",round(r1["t_teste1"][10],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t6",round(r1["t_teste1"][9],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t7",round(r1["t_teste1"][8],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t8",round(r1["t_teste1"][7],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t9",round(r1["t_teste1"][6],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t10",round(r1["t_teste1"][5],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t11",round(r1["t_teste1"][4],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t12",round(r1["t_teste1"][3],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t13",round(r1["t_teste1"][2],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t14",round(r1["t_teste1"][1],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.t15",round(r1["t_teste1"][0],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f1",round(r1["f_teste1"][14],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f2",round(r1["f_teste1"][13],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f3",round(r1["f_teste1"][12],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f4",round(r1["f_teste1"][11],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f5",round(r1["f_teste1"][10],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f6",round(r1["f_teste1"][9],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f7",round(r1["f_teste1"][8],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f8",round(r1["f_teste1"][7],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f9",round(r1["f_teste1"][6],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f10",round(r1["f_teste1"][5],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f11",round(r1["f_teste1"][4],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f12",round(r1["f_teste1"][3],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f13",round(r1["f_teste1"][2],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f14",round(r1["f_teste1"][1],3)],
+                        ["Dados.Relatorios.CoastDown.teste1.f15",round(r1["f_teste1"][0],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t1",round(r1["dt_max"][14],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t2",round(r1["dt_max"][13],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t3",round(r1["dt_max"][12],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t4",round(r1["dt_max"][11],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t5",round(r1["dt_max"][10],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t6",round(r1["dt_max"][9],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t7",round(r1["dt_max"][8],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t8",round(r1["dt_max"][7],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t9",round(r1["dt_max"][6],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t10",round(r1["dt_max"][5],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t11",round(r1["dt_max"][4],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t12",round(r1["dt_max"][3],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t13",round(r1["dt_max"][2],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t14",round(r1["dt_max"][1],3)],
+                        ["Dados.Relatorios.CoastDown.delta.t15",round(r1["dt_max"][0],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f1",round(r1["df_max"][14],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f2",round(r1["df_max"][13],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f3",round(r1["df_max"][12],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f4",round(r1["df_max"][11],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f5",round(r1["df_max"][10],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f6",round(r1["df_max"][9],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f7",round(r1["df_max"][8],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f8",round(r1["df_max"][7],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f9",round(r1["df_max"][6],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f10",round(r1["df_max"][5],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f11",round(r1["df_max"][4],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f12",round(r1["df_max"][3],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f13",round(r1["df_max"][2],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f14",round(r1["df_max"][1],3)],
+                        ["Dados.Relatorios.CoastDown.delta.f15",round(r1["df_max"][0],3)]
+                    ]
                 )
         except Exception as e:
             print(e)
@@ -460,8 +696,8 @@ def Operation_Warmup():
                 e3.write_tag(["Dados.apis.Operation_Warmup.btn",False])
                 dados_recebidos=e3.read_tag(tag_list)
                 dados_enviar={
-                    "warmupVelocity": [int(dados_recebidos[0]),int(dados_recebidos[1]),int(dados_recebidos[2]),int(dados_recebidos[3]),int(dados_recebidos[4])],
-                    "warmupTime": [int(dados_recebidos[5]),int(dados_recebidos[6]),int(dados_recebidos[7]),int(dados_recebidos[8]),int(dados_recebidos[9])]
+                    "warmupVelocity": [int(dados_recebidos[0]),int(dados_recebidos[1]),int(dados_recebidos[2]),int(dados_recebidos[3]),int(dados_recebidos[4]),0],
+                    "warmupTime": [int(dados_recebidos[5]),int(dados_recebidos[6]),int(dados_recebidos[7]),int(dados_recebidos[8]),int(dados_recebidos[9]),5]
                 }
                 c.post(key,dados_enviar)
         except Exception as e:
@@ -844,7 +1080,7 @@ async def wsocket():
                     except Exception as e:
                         print("Falha:{}{}".format(e,d[0]))
                     time.sleep(0.1)
-        except:
+        except Exception as e:
             pass
         time.sleep(10)
         time_web_socket = time.time() - start_time
@@ -1023,7 +1259,7 @@ for th in t:
 async def echo(websocket):
     async for message in websocket:
         try:
-            await websocket.send("{\"Velocidade_kmh\":"+str(r_data[0][1])+",\"start\":"+str((int(r_data[11][1])&4)==4).lower()+",\"stop\":"+str((int(r_data[11][1])&8)==8).lower()+",\"end\":"+str((int(r_data[11][1])&2)==2).lower()+"}")
+            await websocket.send("{\"Forca_Calibrada\":"+str(r_data[1][1])+",\"Velocidade_kmh\":"+str(r_data[0][1])+",\"start\":"+str((int(r_data[11][1])&4)==4).lower()+",\"stop\":"+str((int(r_data[11][1])&8)==8).lower()+",\"end\":"+str((int(r_data[11][1])&2)==2).lower()+"}")
             mess=json.loads(message)
             try:
                 e3.write_tag(["Dados.apis.websocket.acertos",mess["acertos"]])
@@ -1069,6 +1305,5 @@ loop.run_forever()
 #        asyncio.get_event_loop().run_until_complete(wsocket())
 #    except:
 #        pass
-
-#for th in t:
-    #th.join()
+for th in t:
+    th.join()
