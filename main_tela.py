@@ -1007,7 +1007,7 @@ def Interface_RoadTests():
                 t=e3.read_tag("Dados.apis.Operation_Warmup.stop")
                 post_ope_interface_free_teste = {
                     "TestStart": False,
-                    "UserStop": True,
+                    "UserStop": t,
                     "TestEnd": False
                 }    
                 c.post(key, post_ope_interface_free_teste)
